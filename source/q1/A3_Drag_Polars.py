@@ -81,20 +81,20 @@ title = "AT-V1"
 print("C_D0 for ", title)
 plot_Drag_Polar(AR, Span, Wing_area, Max_Takeoff_W, c_f, c, d, title)
 
-# Setting Variables From OpenVSP (VT-V2)
-AR = 7.78                   #Aspect Ratio
-Span = 65                #Wing Span (ft)
-Wing_area = 542.86             #Wing Area (ft^2)
-Max_Takeoff_W = 100963        #Max Takeoff Weight (lbs)
-title = "AT-V2"
-print("C_D0 for ", title)
-plot_Drag_Polar(AR, Span, Wing_area, Max_Takeoff_W, c_f, c, d, title)
+# # Setting Variables From OpenVSP (VT-V2)
+# AR = 7.78                   #Aspect Ratio
+# Span = 65                #Wing Span (ft)
+# Wing_area = 542.86             #Wing Area (ft^2)
+# Max_Takeoff_W = 100963        #Max Takeoff Weight (lbs)
+# title = "AT-V2"
+# print("C_D0 for ", title)
+# plot_Drag_Polar(AR, Span, Wing_area, Max_Takeoff_W, c_f, c, d, title)
 
-# Setting Variables From OpenVSP (VT-V3)
-AR = 6.28                   #Aspect Ratio
-Span = 90                #Wing Span (ft)
-Wing_area = 290             #Wing Area (ft^2)
-Max_Takeoff_W = 100963        #Max Takeoff Weight (lbs)
-title = "AT-V3"
-print("C_D0 for ", title)
-plot_Drag_Polar(AR, Span, Wing_area, Max_Takeoff_W, c_f, c, d, title)
+# # Setting Variables From OpenVSP (VT-V3)
+# AR = 6.28                   #Aspect Ratio
+# Span = 90                #Wing Span (ft)
+# Wing_area = 290             #Wing Area (ft^2)
+# Max_Takeoff_W = 100963        #Max Takeoff Weight (lbs)
+# title = "AT-V3"
+# print("C_D0 for ", title)
+# plot_Drag_Polar(AR, Span, Wing_area, Max_Takeoff_W, c_f, c, d, title)
