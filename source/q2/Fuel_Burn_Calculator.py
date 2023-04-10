@@ -7,13 +7,14 @@ from scipy.optimize import least_squares
 import pandas as pd
 
 #Drag Polar Calculation
+
 def Get_Drag_Polar(AR, Span, Wing_area, Max_Takeoff_W, c_f, c, d, phase):
     
     phase_dict = {"Clean" : 0,
-                  "Takeoff flaps" : 1,
-                  "Landing flaps" : 2,
-                  "Landing gear" : 3
-                  }
+                "Takeoff flaps" : 1,
+                "Landing flaps" : 2,
+                "Landing gear" : 3
+                }
     i = phase_dict[phase]
     
     #Values from Roskam Vol 1 Table 3.6
@@ -41,7 +42,6 @@ def Get_Drag_Polar(AR, Span, Wing_area, Max_Takeoff_W, c_f, c, d, phase):
     
     return C_D, C_L, C_D0, K_vals
 
-#Calculating C_D and C_L values and plotting (AT-V1)
 def get_Drag_Coeffiecents(AR, Span, Wing_area, Max_Takeoff_W, c_f, c, d):
 
     C_D_Clean, C_L_Clean, C_D0_Clean, K_Clean = Get_Drag_Polar(AR, Span, Wing_area, Max_Takeoff_W, c_f, c, d, phase = "Clean") 
@@ -54,9 +54,9 @@ def get_Drag_Coeffiecents(AR, Span, Wing_area, Max_Takeoff_W, c_f, c, d):
     
     return C_D0_Clean, C_D_Takeoff, C_D0_Landing_flaps, C_D0_Landing_gear, C_D0_Landing_flaps, K_Clean, K_Takeoff, K_Landing_flaps, K_Landing_gear
 
- #Fuel Fraction Calculator
+#Fuel Fraction Calculator
 def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, L_D, R, segments, V_cruise, C_D0, K, AR, e):
-
+    
     #Calculating Start, Warm-up, and Taxi Fuel Burn
     #Based Upon Assumption of Idling for 15 minutes w/ ideal being 5% of Max Power
     #SFC units lbm/(hp*hr)
@@ -64,22 +64,36 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, L_D, R, segments, V_cruise, C_D0, 
     SWT_fuel_burn = SFC * 15/60 * idle_POW          #Units lbm
     SWT_fuel_weight = SWT_fuel_burn * 32.17
 
+    W_takeoff = MTOW - SWT_fuel_burn
+
+    #Calculating Takeoff Fuel Fraction
+    #Assuming 1min at Max Power
+    ff_takeoff = 1 - 1 / 60 * SFC / eta * ( MPOW / W_takeoff ) 
+
+
     #Calculating Cruise Fuel Fraction
     range_intervals = np.linspace(0, R, segments)
 
+    #Calculating coeffficent of lift
+    #CL_seg = 2 * W_cruise[i]
+
+    #Calculating Lift to Drag Ratio
 
     #Calculating Descent and Landing (Historical Data)
     ff_descent = 0.990
     ff_landing = 0.995
 
+    return
+
 c = -0.0866                     #Roskam Vol 1 Table 3.5 (For a regional Turboprop)
 d = 0.8099                      #Roskam Vol 1 Table 3.5 (For a regional Turboprop)
 c_f = 0.0026                    #Raymer 2012 Table 12.3
+SFC = 0.4                       #Metabook (Mattingly 1996 Fig 1.17b)
 
 # Setting Variables From OpenVSP (VT-V1)
 AR = 10.06133                   #Aspect Ratio
 Span = 96.428                   #Wing Span (ft)
-Wing_area = 805.06             #Wing Area (ft^2)
+Wing_area = 805.06              #Wing Area (ft^2)
 Max_Takeoff_W = 82561.08        #Max Takeoff Weight (lbs)
 C_D0_Clean, C_D_Takeoff, C_D0_Landing_flaps, C_D0_Landing_gear, C_D0_Landing_flaps, K_Clean, K_Takeoff, K_Landing_flaps, K_Landing_gear \
       = get_Drag_Coeffiecents(AR, Span, Wing_area, Max_Takeoff_W, c_f, c, d)
