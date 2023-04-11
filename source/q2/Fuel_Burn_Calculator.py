@@ -145,27 +145,13 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
 
         delta_he_vals_climb[i] = he_vals_climb[i] - he_vals_climb[i-1]
 
-        ff_vals_climb[i] = np.exp( -c_t * 32.17 / 3600 * delta_he_vals_climb[i] / ( velocity_vals_climb[i] * ( 1 - D_vals_climb[i] / ( weight_vals_climb[i] * thrust_weight_vals_climb[i] ) ) ) )
+        ff_vals_climb[i] = np.exp( -c_t / 3600 * delta_he_vals_climb[i] / ( velocity_vals_climb[i] * ( 1 - D_vals_climb[i] / ( weight_vals_climb[i] * thrust_weight_vals_climb[i] ) ) ) )
         
         weight_vals_climb[i+1] = weight_vals_climb[i] * ff_vals_climb[i]
+
+    weight_climb = weight_vals_climb[-1]                        #Weight of Plane After Climb (lbf)
+    climb_fuel_burn = weight_vals_climb[0] - weight_climb       #Weight of Fuel Burned During Climb (lbf)
     
-
-    
-    print("Thrust to Weight: ", thrust_weight_vals_climb)
-    print("Climb Velocity Vals: ", velocity_vals_climb)
-    print("CL Values Climb: ", C_L_vals_climb)
-
-    print("Drag Values: ", D_vals_climb)
-    print("Thrust Values: ", weight_vals_climb * thrust_weight_vals_climb )
-    print("delta h_e vals: ", delta_he_vals_climb)
-    print("Climb Fuel Fraction Values: ", ff_vals_climb)
-    print("Climb Weight Values ", weight_vals_climb)
-
-    # i = 1
-    # print("Test Case Whole: ", -c_t * delta_he_vals_climb[i] / ( velocity_vals_climb[i] * ( 1 - D_vals_climb[i] / ( weight_vals_climb[i] * thrust_weight_vals_climb[i] ) ) ))
-    # print("Test Case (denom): ", ( velocity_vals_climb[i] * ( 1 - D_vals_climb[i] / ( weight_vals_climb[i] * thrust_weight_vals_climb[i] ) ) ))
-    # print("Test Case (num): ", -c_t * delta_he_vals_climb[i])
-    # print("h: ", h_vals)
     #Calculating Cruise Fuel Fraction
     range_intervals = np.linspace(0, R, segments)
 
