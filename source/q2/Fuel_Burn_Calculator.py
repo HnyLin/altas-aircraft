@@ -112,7 +112,7 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
         MTOW = weight_vals_climb[i]
         C_D0_Clean, K_Clean = get_Drag_Coeffiecents(AR, Span, Wing_area, MTOW, c_f, c, d)
 
-        velocity_vals_climb[i] = np.sqrt( weight_vals_climb[i] / Wing_area / ( 3 * rho_vals[i] * C_D0_Clean) * ( thrust_weight_vals_climb[i] + np.sqrt( thrust_weight_vals_climb[i]**2 + 12 * C_D0_Clean * K_Clean ) ) )
+        velocity_vals_climb[i] = np.sqrt( 32.17 * weight_vals_climb[i] / Wing_area / ( 3 * rho_vals[i] * C_D0_Clean) * ( thrust_weight_vals_climb[i] + np.sqrt( thrust_weight_vals_climb[i]**2 + 12 * C_D0_Clean * K_Clean ) ) )
 
         C_L_vals_climb[i] = 2 * weight_vals_climb[i] / ( rho_vals[i] * velocity_vals_climb[i] ** 2 * Wing_area )
 
@@ -120,7 +120,7 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
 
         D_vals_climb[i] = rho_vals[i] * velocity_vals_climb[i] ** 2 / 2 * Wing_area * C_D_vals_climb[i]
 
-        temp[i] = h_vals[i] + velocity_vals_climb[i]**2 / (2 * 32.17)
+        #temp[i] = h_vals[i] + velocity_vals_climb[i]**2 / (2 * 32.17)
 
 
     print("Climb Velcoity Vals: ", velocity_vals_climb)
