@@ -126,7 +126,6 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
 
     he_vals_climb[i] = h_vals[i] + velocity_vals_climb[i]**2 / (2 * 32.17)
 
-
     for i in range(1, segments-1):
         thrust_weight_vals_climb[i] = eta / V_cruise * MPOW / weight_vals_climb[i] * 550    #Horsepower Conversion
 
@@ -151,12 +150,35 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
 
     weight_climb = weight_vals_climb[-1]                        #Weight of Plane After Climb (lbf)
     climb_fuel_burn = weight_vals_climb[0] - weight_climb       #Weight of Fuel Burned During Climb (lbf)
-    
+
+    print("Climb Exit Velocity (ft/s): ", velocity_vals_climb[-2])
+    print("Climb Fuel Burn (lbf): ", climb_fuel_burn)
+
     #Calculating Cruise Fuel Fraction
+    #Allocating Space
+    weight_vals_cruise = np.ones(segments)
+    weight_vals_cruise[0] = weight_climb
+    velocity_vals_cruise = np.ones(segments)
+    velocity_vals_cruise[0] = velocity_vals_climb[2]
+    CL_vals_cruise = np.ones(segments)
+    LD_vals_cruise = np.ones(segments)
+    ff_vals_cruise = np.ones(segments)
+
+    rho_cruise = np.interp(28000, h_interp, rho_interp)
+
     range_intervals = np.linspace(0, R, segments)
 
     #Calculating coeffficent of lift
-    #CL_seg = 2 * W_cruise[i]
+    for i in range(segments):
+        CL_vals_cruise[i] = 2 * weight_vals_cruise[i] / ( rho_cruise * velocity_vals_cruise[i]**2 * Wing_area ) * 32.17     #lbm_lbf conversion
+
+        MTOW = weight_vals_cruise[i]
+        C_D0_Clean, K_Clean = get_Drag_Coeffiecents(AR,  Wing_area, MTOW, c_f, c, d)
+
+        LD_vals_cruise[i] = CL_vals_cruise[i] / ( C_D0_Clean + K_Clean * CL_vals_cruise[i]**2 )
+
+        ff_vals_cruise[i] = np.exp( -R * c_t / ( V_cruise * LD_vals_cruise[i] ) )
+
 
     #Calculating Lift to Drag Ratio
 
