@@ -81,10 +81,11 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
     print("Takeoff Fuel Weight (lbf): ", Takeoff_fuel_weight)
 
     #Calculating Climb Fuel Fractions (Multi-Segment Approach)
-    ff_vals_climb = np.ones(segments)
+    ff_vals_climb = np.ones(segments-1)
 
     weight_vals_climb = np.ones(segments)
     weight_vals_climb[0] = W_Takeoff
+    weight_vals_climb[1] = weight_vals_climb[0]
     
     thrust_weight_vals_climb = np.ones(segments)
 
@@ -96,9 +97,9 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
 
     D_vals_climb = np.ones(segments)
 
-    delta_h_e = np.ones(segments - 1)
+    he_vals_climb = np.ones(segments)
 
-    temp = np.ones(segments)
+    delta_he_vals_climb = np.ones(segments - 1)
 
     rho_interp = [0.0765, 0.0565, 0.0408, 0.0287, 0.0189]
     h_interp = [0, 10000, 20000, 30000, 40000]
@@ -106,25 +107,55 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
     h_vals = np.linspace(0, h_cruise, segments)
     rho_vals = np.interp(h_vals, h_interp, rho_interp)
 
-    for i in range(len(ff_vals_climb)):
-        thrust_weight_vals_climb[i] = eta / V_cruise * MPOW / weight_vals_climb[i]
+    c_t = 0.4                                       #Thrust Specific Fuel Consumption (Check!!!!!!!!!!!!!!!!!!!!!!!!)
 
-        MTOW = weight_vals_climb[i]
+    #Calculating Intial Condition
+    i = 0
+    thrust_weight_vals_climb[i] = eta / V_cruise * MPOW / weight_vals_climb[i] * 550        #Horsepower Conversion
+
+    MTOW = weight_vals_climb[i]
+    C_D0_Clean, K_Clean = get_Drag_Coeffiecents(AR, Span, Wing_area, MTOW, c_f, c, d)
+
+    velocity_vals_climb[i] = np.sqrt( 32.17 * weight_vals_climb[i] / Wing_area / ( 3 * rho_vals[i] * C_D0_Clean) * ( thrust_weight_vals_climb[i] + np.sqrt( thrust_weight_vals_climb[i]**2 + 12 * C_D0_Clean * K_Clean ) ) )
+
+    C_L_vals_climb[i] = 2 * weight_vals_climb[i] / ( rho_vals[i] * velocity_vals_climb[i] ** 2 * Wing_area ) * 32.17        #lbf_lbm converison
+
+    C_D_vals_climb[i] = C_D0_Clean + K_Clean * C_L_vals_climb[i] ** 2
+
+    D_vals_climb[i] = rho_vals[i] * velocity_vals_climb[i] ** 2 / 2 * Wing_area * C_D_vals_climb[i] * 32.17                 #lbf_lbm conversion
+
+    he_vals_climb[i] = h_vals[i] + velocity_vals_climb[i]**2 / (2 * 32.17)
+
+
+    for i in range(1, segments):
+        thrust_weight_vals_climb[i] = eta / V_cruise * MPOW / weight_vals_climb[i-1] * 550    #Horsepower Conversion
+
+        MTOW = weight_vals_climb[i-1]
         C_D0_Clean, K_Clean = get_Drag_Coeffiecents(AR, Span, Wing_area, MTOW, c_f, c, d)
 
-        velocity_vals_climb[i] = np.sqrt( 32.17 * weight_vals_climb[i] / Wing_area / ( 3 * rho_vals[i] * C_D0_Clean) * ( thrust_weight_vals_climb[i] + np.sqrt( thrust_weight_vals_climb[i]**2 + 12 * C_D0_Clean * K_Clean ) ) )
+        velocity_vals_climb[i] = np.sqrt( 32.17 * weight_vals_climb[i-1] / Wing_area / ( 3 * rho_vals[i] * C_D0_Clean) * ( thrust_weight_vals_climb[i] + np.sqrt( thrust_weight_vals_climb[i]**2 + 12 * C_D0_Clean * K_Clean ) ) )
 
-        C_L_vals_climb[i] = 2 * weight_vals_climb[i] / ( rho_vals[i] * velocity_vals_climb[i] ** 2 * Wing_area )
+        C_L_vals_climb[i] = 2 * weight_vals_climb[i-1] / ( rho_vals[i] * velocity_vals_climb[i] ** 2 * Wing_area ) * 32.17    #lbf_lbm conversion
 
         C_D_vals_climb[i] = C_D0_Clean + K_Clean * C_L_vals_climb[i] ** 2
 
-        D_vals_climb[i] = rho_vals[i] * velocity_vals_climb[i] ** 2 / 2 * Wing_area * C_D_vals_climb[i]
+        D_vals_climb[i] = rho_vals[i] * velocity_vals_climb[i] ** 2 / 2 * Wing_area * C_D_vals_climb[i] * 32.17             #lbf_lbm conversion
 
-        #temp[i] = h_vals[i] + velocity_vals_climb[i]**2 / (2 * 32.17)
+        he_vals_climb[i] = h_vals[i] + velocity_vals_climb[i]**2 / (2 * 32.17)
+
+        delta_he_vals_climb[i-1] = he_vals_climb[i] - he_vals_climb[i-1]
+
+        ff_vals_climb[i-1] = np.exp( -c_t * delta_he_vals_climb[i-1] / ( velocity_vals_climb[i] * ( 1 - D_vals_climb[i] / ( weight_vals_climb[i-1] * thrust_weight_vals_climb[i] ) ) ) )
+
+        weight_vals_climb[i] = weight_vals_climb[i-1] * ff_vals_climb[i-1]
 
 
-    print("Climb Velcoity Vals: ", velocity_vals_climb)
+
+
+    print("Climb Velocity Vals: ", velocity_vals_climb)
     print("CL Values Climb: ", C_L_vals_climb)
+    print("Climb Weight Values ", weight_vals_climb)
+    print("Climb Fuel Fraction Values: ", ff_vals_climb)
 
     #Calculating Cruise Fuel Fraction
     range_intervals = np.linspace(0, R, segments)
