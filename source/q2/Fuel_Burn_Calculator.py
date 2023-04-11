@@ -96,12 +96,15 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
 
     D_vals_climb = np.ones(segments)
 
+    delta_h_e = np.ones(segments - 1)
+
+    temp = np.ones(segments)
+
     rho_interp = [0.0765, 0.0565, 0.0408, 0.0287, 0.0189]
     h_interp = [0, 10000, 20000, 30000, 40000]
 
     h_vals = np.linspace(0, h_cruise, segments)
     rho_vals = np.interp(h_vals, h_interp, rho_interp)
-    print("rho_vals: ", rho_vals)
 
     for i in range(len(ff_vals_climb)):
         thrust_weight_vals_climb[i] = eta / V_cruise * MPOW / weight_vals_climb[i]
@@ -113,8 +116,15 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
 
         C_L_vals_climb[i] = 2 * weight_vals_climb[i] / ( rho_vals[i] * velocity_vals_climb[i] ** 2 * Wing_area )
 
+        C_D_vals_climb[i] = C_D0_Clean + K_Clean * C_L_vals_climb[i] ** 2
+
+        D_vals_climb[i] = rho_vals[i] * velocity_vals_climb[i] ** 2 / 2 * Wing_area * C_D_vals_climb[i]
+
+        temp[i] = h_vals[i] + velocity_vals_climb[i]**2 / (2 * 32.17)
 
 
+    print("Climb Velcoity Vals: ", velocity_vals_climb)
+    print("CL Values Climb: ", C_L_vals_climb)
 
     #Calculating Cruise Fuel Fraction
     range_intervals = np.linspace(0, R, segments)
