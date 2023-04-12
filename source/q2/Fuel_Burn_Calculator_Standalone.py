@@ -21,7 +21,7 @@ V_cruise: Cruising Velocity (int) [ft/s]
 hybridization_factors: Takes a List of 6 Values 0 (gas) 1 (electric) order: Start Warmup Taxi, Takeoff, Climb, Cruise, Descent, Landing
 
 Outputs:
-6 Values for Fuel Burn in lbs, Function Prints Fuel Burn for each Phase
+6 Values for Fuel Burn [lbs], Function Prints Fuel Burn for each Phase
 '''
 import numpy as np
 from scipy.optimize import least_squares
