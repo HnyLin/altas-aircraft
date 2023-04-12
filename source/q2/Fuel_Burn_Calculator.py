@@ -72,9 +72,9 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
     #Assuming 1min at Max Power
     ff_takeoff = 1 - 1 / 60 * SFC / eta * ( MPOW / W_SWT ) * 32.17 #eta is prop efficency
 
-    W_Takeoff = W_SWT * ff_takeoff * (1 - hybridization_factors[1])
+    W_Takeoff = W_SWT * ff_takeoff 
 
-    Takeoff_fuel_burn = W_SWT - W_Takeoff
+    Takeoff_fuel_burn = (W_SWT - W_Takeoff) * (1-hybridization_factors[1])
     print("Takeoff Fuel Weight (lbf): ", Takeoff_fuel_burn)
 
     #Calculating Climb Fuel Fractions (Multi-Segment Approach)
@@ -216,8 +216,5 @@ segments = 20
 
 #Start Warmup Taxi, Takeoff, Climb, Cruise, Descent, Landing
 hybridization_factors = (0.5, 0.5, 0, 0, 0.5, 0.5)
-
-# C_D0_Clean, C_D_Takeoff, C_D0_Landing_flaps, C_D0_Landing_gear, C_D0_Landing_flaps, K_Clean, K_Takeoff, K_Landing_flaps, K_Landing_gear \
-#       = get_Drag_Coeffiecents(AR,  Wing_area, MTOW, c_f, c, d)
 
 SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn = Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_cruise)
