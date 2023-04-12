@@ -62,23 +62,20 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
     #Based Upon Assumption of Idling for 15 minutes w/ ideal being 5% of Max Power
     #SFC units lbm/(hp*hr)
     idle_POW = 0.05 * MPOW
-    SWT_fuel_burn = (1 - hybridization_factors[0]) * SFC * 15/60 * idle_POW          #Units lbm
-    SWT_fuel_weight = SWT_fuel_burn * 32.17
-    print("SWT Fuel Burn (lbf): ", SWT_fuel_weight)
+    SWT_fuel_mass = (1 - hybridization_factors[0]) * SFC * 15/60 * idle_POW          #Units lbm
+    SWT_fuel_burn = SWT_fuel_mass * 32.17
+    print("SWT Fuel Burn (lbf): ", SWT_fuel_burn)
 
-    W_SWT = MTOW - SWT_fuel_weight
-    print("W_SWT (lbf): ", W_SWT)
+    W_SWT = MTOW - SWT_fuel_burn
 
     #Calculating Takeoff Fuel Fraction
     #Assuming 1min at Max Power
     ff_takeoff = 1 - 1 / 60 * SFC / eta * ( MPOW / W_SWT ) * 32.17 #eta is prop efficency
-    print("ff_takeoff", ff_takeoff)
 
     W_Takeoff = W_SWT * ff_takeoff * (1 - hybridization_factors[1])
-    print("W_Takeoff (lbf): ", W_Takeoff)
 
-    Takeoff_fuel_weight = W_SWT - W_Takeoff
-    print("Takeoff Fuel Weight (lbf): ", Takeoff_fuel_weight)
+    Takeoff_fuel_burn = W_SWT - W_Takeoff
+    print("Takeoff Fuel Weight (lbf): ", Takeoff_fuel_burn)
 
     #Calculating Climb Fuel Fractions (Multi-Segment Approach)
     ff_vals_climb = np.ones(segments-1)
@@ -150,43 +147,52 @@ def Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_crui
 
     weight_climb = weight_vals_climb[-1]                        #Weight of Plane After Climb (lbf)
     climb_fuel_burn = weight_vals_climb[0] - weight_climb       #Weight of Fuel Burned During Climb (lbf)
-
-    print("Climb Exit Velocity (ft/s): ", velocity_vals_climb[-2])
+    climb_fuel_burn = climb_fuel_burn * (1 - hybridization_factors[2])
+    # print("Climb Exit Velocity (ft/s): ", velocity_vals_climb[-2])
     print("Climb Fuel Burn (lbf): ", climb_fuel_burn)
 
     #Calculating Cruise Fuel Fraction
     #Allocating Space
     weight_vals_cruise = np.ones(segments)
     weight_vals_cruise[0] = weight_climb
-    velocity_vals_cruise = np.ones(segments)
-    velocity_vals_cruise[0] = velocity_vals_climb[2]
     CL_vals_cruise = np.ones(segments)
     LD_vals_cruise = np.ones(segments)
     ff_vals_cruise = np.ones(segments)
 
     rho_cruise = np.interp(28000, h_interp, rho_interp)
 
-    range_intervals = np.linspace(0, R, segments)
-
     #Calculating coeffficent of lift
-    for i in range(segments):
-        CL_vals_cruise[i] = 2 * weight_vals_cruise[i] / ( rho_cruise * velocity_vals_cruise[i]**2 * Wing_area ) * 32.17     #lbm_lbf conversion
+    for i in range(segments-1):
+        CL_vals_cruise[i] = 2 * weight_vals_cruise[i] / ( rho_cruise * V_cruise**2 * Wing_area ) * 32.17     #lbm_lbf conversion
 
         MTOW = weight_vals_cruise[i]
         C_D0_Clean, K_Clean = get_Drag_Coeffiecents(AR,  Wing_area, MTOW, c_f, c, d)
 
         LD_vals_cruise[i] = CL_vals_cruise[i] / ( C_D0_Clean + K_Clean * CL_vals_cruise[i]**2 )
 
-        ff_vals_cruise[i] = np.exp( -R * c_t / ( V_cruise * LD_vals_cruise[i] ) )
+        ff_vals_cruise[i] = np.exp( -R / segments * c_t / 3600 / ( V_cruise * LD_vals_cruise[i] ) )
 
+        weight_vals_cruise[i+1] = ff_vals_cruise[i] * weight_vals_cruise[i]
 
-    #Calculating Lift to Drag Ratio
+    cruise_fuel_burn = weight_vals_cruise[0] - weight_vals_cruise[-1]
+    cruise_fuel_burn = cruise_fuel_burn * (1 - hybridization_factors[3])
+    print("Cruise Fuel Burn (lbf): ", cruise_fuel_burn)
 
     #Calculating Descent and Landing (Historical Data)
+    weight_descent_entry = weight_vals_cruise[-1]
     ff_descent = 0.990
-    ff_landing = 0.995
+    weight_descent_exit = ff_descent * weight_descent_entry
+    desecent_fuel_burn = weight_descent_entry - weight_descent_exit
+    desecent_fuel_burn = desecent_fuel_burn * (1 - hybridization_factors[4])
+    print("Descent Fuel Burn (lbf): ", desecent_fuel_burn)
 
-    return
+    ff_landing = 0.995
+    weight_landing_exit = ff_landing * weight_descent_exit
+    landing_fuel_burn = weight_descent_exit - weight_landing_exit
+    landing_fuel_burn = landing_fuel_burn * (1 - hybridization_factors[5])
+    print("Landing Fuel Burn (lbf): ", landing_fuel_burn)
+
+    return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn
 
 c = -0.0866                     #Roskam Vol 1 Table 3.5 (For a regional Turboprop)
 d = 0.8099                      #Roskam Vol 1 Table 3.5 (For a regional Turboprop)
@@ -207,9 +213,11 @@ h_cruise = 28000                #Cruising Altitude (ft)!!!!!!
 V_cruise = 350 * 1.688 
 
 segments = 20
-hybridization_factors = (0.25, 0, 0, 0.5, 0.5)
+
+#Start Warmup Taxi, Takeoff, Climb, Cruise, Descent, Landing
+hybridization_factors = (0.5, 0.5, 0, 0, 0.5, 0.5)
 
 # C_D0_Clean, C_D_Takeoff, C_D0_Landing_flaps, C_D0_Landing_gear, C_D0_Landing_flaps, K_Clean, K_Takeoff, K_Landing_flaps, K_Landing_gear \
 #       = get_Drag_Coeffiecents(AR,  Wing_area, MTOW, c_f, c, d)
 
-Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_cruise)
+SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn = Fuel_Fraction_Calculator(MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_cruise)
