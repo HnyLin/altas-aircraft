@@ -182,6 +182,8 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
 
     rho_cruise = np.interp(28000, h_interp, rho_interp)
 
+    range_vals = np.linspace(0, R, segments)
+
     #Calculating coeffficent of lift
     for i in range(segments-1):
         CL_vals_cruise[i] = 2 * weight_vals_cruise[i] / ( rho_cruise * V_cruise**2 * Wing_area ) * 32.17     #lbm_lbf conversion
@@ -191,7 +193,7 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
 
         LD_vals_cruise[i] = CL_vals_cruise[i] / ( C_D0_Clean + K_Clean * CL_vals_cruise[i]**2 )
 
-        ff_vals_cruise[i] = np.exp( -R / segments * c_t / 3600 / ( V_cruise * LD_vals_cruise[i] ) )
+        ff_vals_cruise[i] = np.exp( -range_vals[i] * c_t / 3600 / ( V_cruise * LD_vals_cruise[i] ) )
 
         weight_vals_cruise[i+1] = ff_vals_cruise[i] * weight_vals_cruise[i]
 
