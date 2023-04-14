@@ -1,6 +1,29 @@
 #By Henry Lin
 #4/8/2023
 #Fuel Burn Calculator V2
+
+'''
+Description:
+Inputs:
+AR: Aspect Ratio (int)
+Wing_area: Wing Area (int) [ft^2]
+c_f: Roskam Skin Friction Coefficent (0.0026 for a Reg Turboprop)
+c: Roskam Historical Regression Vol 1 Table 3.5 (-0.0866 for a Reg Turboprop)
+d: Roskam Historical Regression Vol 1 Table 3.5 (0.8099 for a Reg Turboprop)
+MTOW: Maximum Takeoff Weight (int) [lbf]
+MPOW: Maximum Power (int) [hp]
+SFC: Specific Fuel Consuption  (int) [lbm / (hp*hr)] Recommended Value: 0.4 (Metabook, Mattinglu 1996 Fig 1.17b)
+R: Range (int) [ft]
+segments: Number of Segments (increase for increased accuracy) (int)
+eta: Prop Efficency (int)
+h_cruise: Cruising Altitude (int) [ft]
+V_cruise: Cruising Velocity (int) [ft/s]
+hybridization_factors: Takes a List of 6 Values 0 (gas) 1 (electric) order: Start Warmup Taxi, Takeoff, Climb, Cruise, Descent, Landing
+
+Outputs:
+6 Values for Fuel Burn [lbs], Function Prints Fuel Burn for each Phase
+'''
+
 import numpy as np
 
 #Drag Polar Calculation
@@ -180,8 +203,6 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
 
     rho_cruise = np.interp(28000, h_interp, rho_interp)
 
-    range_vals = np.linspace(0, R, segments)
-
     #Calculating coeffficent of lift
     for i in range(segments-1):
         CL_vals_cruise[i] = 2 * weight_vals_cruise[i] / ( rho_cruise * V_cruise**2 * Wing_area ) * 32.17     #lbm_lbf conversion
@@ -191,7 +212,7 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
 
         LD_vals_cruise[i] = CL_vals_cruise[i] / ( C_D0_Clean + K_Clean * CL_vals_cruise[i]**2 )
 
-        ff_vals_cruise[i] = np.exp( -range_vals[i] * c_t / 3600 / ( V_cruise * LD_vals_cruise[i] ) )
+        ff_vals_cruise[i] = np.exp( -R / segments * c_t / 3600 / ( V_cruise * LD_vals_cruise[i] ) )
 
         weight_vals_cruise[i+1] = ff_vals_cruise[i] * weight_vals_cruise[i]
 
@@ -236,7 +257,7 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     total_hybrid_weight = total_battery_weight + total_fuel_burn
     print("Total Hybrid Weight (lbf): ", total_hybrid_weight)
 
-    return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_battery_weight, total_hybrid_weight
+    return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight
 
 c = -0.0866                     #Roskam Vol 1 Table 3.5 (For a regional Turboprop)
 d = 0.8099                      #Roskam Vol 1 Table 3.5 (For a regional Turboprop)
@@ -261,4 +282,4 @@ segments = 20
 #Start Warmup Taxi, Takeoff, Climb, Cruise, Descent, Landing (Loitter Unavaliable)
 hybridization_factors = (0.2, 0.2, 0, 0, 0.5, 0.5)
 
-SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_battery_weight, total_hybrid_weight = Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_cruise, hybridization_factors)
+SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight = Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_cruise, hybridization_factors)

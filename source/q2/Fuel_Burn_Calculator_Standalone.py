@@ -203,8 +203,6 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
 
     rho_cruise = np.interp(28000, h_interp, rho_interp)
 
-    range_vals = np.linspace(0, R, segments)
-
     #Calculating coeffficent of lift
     for i in range(segments-1):
         CL_vals_cruise[i] = 2 * weight_vals_cruise[i] / ( rho_cruise * V_cruise**2 * Wing_area ) * 32.17     #lbm_lbf conversion
@@ -214,7 +212,7 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
 
         LD_vals_cruise[i] = CL_vals_cruise[i] / ( C_D0_Clean + K_Clean * CL_vals_cruise[i]**2 )
 
-        ff_vals_cruise[i] = np.exp( -range_vals[i] * c_t / 3600 / ( V_cruise * LD_vals_cruise[i] ) )
+        ff_vals_cruise[i] = np.exp( -R / segments * c_t / 3600 / ( V_cruise * LD_vals_cruise[i] ) )
 
         weight_vals_cruise[i+1] = ff_vals_cruise[i] * weight_vals_cruise[i]
 
@@ -259,4 +257,4 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     total_hybrid_weight = total_battery_weight + total_fuel_burn
     print("Total Hybrid Weight (lbf): ", total_hybrid_weight)
 
-    return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_battery_weight, total_hybrid_weight
+    return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight
