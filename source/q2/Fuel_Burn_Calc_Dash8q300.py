@@ -54,5 +54,11 @@ SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fu
     FBC.Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_cruise, hybridization_factors)
 
 print("-----------------------------------------")
-print("Dash 8 Fuel Burn: ", D8total_fuel_burn)
-print("ATLAS Fuel Burn: ", total_fuel_burn)
+print("Dash 8 Fuel Burn (lbf): ", D8total_fuel_burn)
+print("Dash 8 Fuel Burn Per Seat (lbf): ", D8total_fuel_burn / 50)
+print("ATLAS Fuel Burn (lbf): ", total_fuel_burn)
+print("ATLAS Fuel Burn Per Seat (lbf): ", total_fuel_burn / 50)
+
+percent_change = (D8total_fuel_burn - total_fuel_burn) / total_fuel_burn * 100
+
+print("Percent Change in Fuel Burn (%): ", percent_change)
