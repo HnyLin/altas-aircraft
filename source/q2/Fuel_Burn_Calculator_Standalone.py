@@ -23,11 +23,18 @@ hybridization_factors: Takes a List of 6 Values 0 (gas) 1 (electric) order: Star
 Outputs:
 6 Values for Fuel Burn [lbs], Function Prints Fuel Burn for each Phase
 '''
+
 import numpy as np
-from scipy.optimize import least_squares
-import pandas as pd
 
 #Drag Polar Calculation
+def HFCA_to_Battery(fuel_weight):
+    fuel_mass = fuel_weight / 32.17
+    SED_JetA1 = 43.1 * 429.9                    #Btu/lb
+    SED_Battery = 500 * 3600 / 10**6 * 429.9    #Btu/lb
+    battery_mass = fuel_mass * SED_JetA1 / SED_Battery
+    battery_weight = battery_mass * 32.17
+
+    return battery_weight
 
 def Get_Drag_Polar(AR, Wing_area, MTOW, c_f, c, d, phase):
     
@@ -83,10 +90,14 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     #Based Upon Assumption of Idling for 15 minutes w/ ideal being 5% of Max Power
     #SFC units lbm/(hp*hr)
     idle_POW = 0.05 * MPOW
-    SWT_fuel_mass = (1 - hybridization_factors[0]) * SFC * 15/60 * idle_POW          #Units lbm
+    SWT_fuel_mass = (1 - hybridization_factors[0]) * SFC * 15/60 * idle_POW         #Units lbm
+
+    SWT_hybrid_weight = hybridization_factors[0] * SFC * 15/60 * idle_POW * 32.17   #Units lbf
+    SWT_battery_weight = HFCA_to_Battery(SWT_hybrid_weight)
+
     SWT_fuel_burn = SWT_fuel_mass * 32.17
     print("SWT Fuel Burn (lbf): ", SWT_fuel_burn)
-
+    print("SWT Battery Weight (lbf): ", SWT_battery_weight)
     W_SWT = MTOW - SWT_fuel_burn
 
     #Calculating Takeoff Fuel Fraction
@@ -96,7 +107,12 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     W_Takeoff = W_SWT * ff_takeoff 
 
     Takeoff_fuel_burn = (W_SWT - W_Takeoff) * (1-hybridization_factors[1])
+
+    Takeoff_hybrid_weight = (W_SWT - W_Takeoff) * (hybridization_factors[1])
+    Takeoff_battery_weight = HFCA_to_Battery(Takeoff_hybrid_weight)
+
     print("Takeoff Fuel Weight (lbf): ", Takeoff_fuel_burn)
+    print("Takeoff Battery Weight (lbf): ", Takeoff_battery_weight)
 
     #Calculating Climb Fuel Fractions (Multi-Segment Approach)
     ff_vals_climb = np.ones(segments-1)
@@ -125,7 +141,7 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     h_vals = np.linspace(0, h_cruise, segments)
     rho_vals = np.interp(h_vals, h_interp, rho_interp)
 
-    c_t = 0.4                                       #Thrust Specific Fuel Consumption (Check!!!!!!!!!!!!!!!!!!!!!!!!)
+    c_t = 0.4                                       #Thrust Specific Fuel Consumption
 
     #Calculating Intial Condition
     i = 0
@@ -168,9 +184,14 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
 
     weight_climb = weight_vals_climb[-1]                        #Weight of Plane After Climb (lbf)
     climb_fuel_burn = weight_vals_climb[0] - weight_climb       #Weight of Fuel Burned During Climb (lbf)
+
+    hybrid_fuel_weight = climb_fuel_burn * hybridization_factors[2]
+    climb_battery_weight = HFCA_to_Battery(hybrid_fuel_weight)
+
     climb_fuel_burn = climb_fuel_burn * (1 - hybridization_factors[2])
     # print("Climb Exit Velocity (ft/s): ", velocity_vals_climb[-2])
     print("Climb Fuel Burn (lbf): ", climb_fuel_burn)
+    print("Climb Battery Weight (lbf): ", climb_battery_weight)
 
     #Calculating Cruise Fuel Fraction
     #Allocating Space
@@ -198,21 +219,44 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
         weight_vals_cruise[i+1] = ff_vals_cruise[i] * weight_vals_cruise[i]
 
     cruise_fuel_burn = weight_vals_cruise[0] - weight_vals_cruise[-1]
+
+    hybrid_fuel_weight = cruise_fuel_burn * hybridization_factors[3]
+    cruise_battery_weight = HFCA_to_Battery(hybrid_fuel_weight)
     cruise_fuel_burn = cruise_fuel_burn * (1 - hybridization_factors[3])
     print("Cruise Fuel Burn (lbf): ", cruise_fuel_burn)
+    print("Cruise Battery Weight (lbf): ", cruise_battery_weight)
 
     #Calculating Descent and Landing (Historical Data)
     weight_descent_entry = weight_vals_cruise[-1]
     ff_descent = 0.990
     weight_descent_exit = ff_descent * weight_descent_entry
     desecent_fuel_burn = weight_descent_entry - weight_descent_exit
+
+    hybrid_fuel_weight = desecent_fuel_burn * hybridization_factors[4]
+    descent_battery_weight = HFCA_to_Battery(hybrid_fuel_weight)
+
     desecent_fuel_burn = desecent_fuel_burn * (1 - hybridization_factors[4])
     print("Descent Fuel Burn (lbf): ", desecent_fuel_burn)
+    print("Descent Fuel Weight (lbf): ", descent_battery_weight)
 
     ff_landing = 0.995
     weight_landing_exit = ff_landing * weight_descent_exit
     landing_fuel_burn = weight_descent_exit - weight_landing_exit
+
+    hybrid_fuel_weight = landing_fuel_burn * hybridization_factors[5]
+    landing_battery_weight = HFCA_to_Battery(hybrid_fuel_weight)
+
     landing_fuel_burn = landing_fuel_burn * (1 - hybridization_factors[5])
     print("Landing Fuel Burn (lbf): ", landing_fuel_burn)
+    print("Landing Battery Weight (lbf): ", landing_battery_weight)
 
-    return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn
+    total_fuel_burn = SWT_fuel_burn + Takeoff_fuel_burn + climb_fuel_burn + cruise_fuel_burn + desecent_fuel_burn + landing_fuel_burn
+    print("Total Fuel Burn (lbf): ", total_fuel_burn)
+
+    total_battery_weight = SWT_battery_weight + Takeoff_battery_weight + climb_battery_weight + cruise_battery_weight + descent_battery_weight + landing_battery_weight
+    print("Total Battery Weight (lbf): ", total_battery_weight)
+
+    total_hybrid_weight = total_battery_weight + total_fuel_burn
+    print("Total Hybrid Weight (lbf): ", total_hybrid_weight)
+
+    return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_battery_weight, total_hybrid_weight
