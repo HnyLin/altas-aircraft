@@ -22,7 +22,7 @@ c_f = 0.0026                    #Raymer 2012 Table 12.3
 SFC = 0.4                       #Metabook (Mattingly 1996 Fig 1.17b) lbm / (hp * hr)
 eta = 0.9                       #Propeller Efficency
 
-segments = 20
+segments = 30
 
 SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, D8total_fuel_burn, D8total_battery_weight, D8total_hybrid_weight = \
     FBC.Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_cruise, hybridization_factors)
@@ -39,13 +39,13 @@ AR = 10.06133                   #Aspect Ratio
 Span = 96.428                   #Wing Span (ft)
 Wing_area = 805.06              #Wing Area (ft^2)
 
-MTOW = 82561.08                 #Max Takeoff Weight (lbs)
-MPOW = 7000                     #Hp Check Value!!!!!!!!!!!
+MTOW = 67551                    #Max Takeoff Weight (lbs)
+MPOW = 6000                     #Hp Check Value!!!!!!!!!!!
 R = 500 * 6076.12               #Range (ft)
-h_cruise = 20000                #Cruising Altitude (ft)!!!!!!
+h_cruise = 28000                #Cruising Altitude (ft)!!!!!!
 V_cruise = 350 * 1.688 
 
-segments = 20
+segments = 30
 
 #Start Warmup Taxi, Takeoff, Climb, Cruise, Descent, Landing (Loitter Unavaliable)
 hybridization_factors = (0.2, 0.2, 0, 0, 0.5, 0.5)
@@ -55,10 +55,10 @@ SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fu
 
 print("-----------------------------------------")
 print("Dash 8 Fuel Burn (lbf): ", D8total_fuel_burn)
-print("Dash 8 Fuel Burn Per Seat (lbf): ", D8total_fuel_burn / 50)
+print("Dash 8 Fuel Burn Per Seat (lbf/seat): ", D8total_fuel_burn / 50)
 print("ATLAS Fuel Burn (lbf): ", total_fuel_burn)
-print("ATLAS Fuel Burn Per Seat (lbf): ", total_fuel_burn / 50)
+print("ATLAS Fuel Burn Per Seat (lbf/seat): ", total_fuel_burn / 50)
 
 percent_change = (D8total_fuel_burn - total_fuel_burn) / total_fuel_burn * 100
 
-print("Percent Change in Fuel Burn (%): ", percent_change)
+print("Percent Difference in Fuel Burn (%): ", percent_change)
