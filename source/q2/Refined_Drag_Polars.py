@@ -14,6 +14,7 @@ Landing Flaps, gear Down
 '''
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 #Calculating Zero Lift Drag
 def get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals):
@@ -37,3 +38,16 @@ def get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle):
     delta_CD_flap = 1.7 * ( flap_length / chord ) ** 1.38 * (flapped_area / S_ref) * np.sin(flap_angle) ** 2
 
     return delta_CD_flap
+
+#Calculating Trim Drag
+def get_CD_trim(length_wingac_to_tailac, tail_area, S_ref, mean_chord):
+
+    V_HT = length_wingac_to_tailac * tail_area / ( S_ref * mean_chord )
+
+    CL_t = ( CL_w * length_wingac_cg / mean_chord + CM_ac_minus_t ) * length_wingac_to_tailac / ( length_wingac_to_tailac - lenth_wingac_cg ) * 1 / V_HT
+
+    oswald_eff = 1.78 * ( 1 - 0.045 * AR_tail ** 0.68 - 0.64 )
+
+    CD_trim = CL_t ** 2 / ( np.pi * oswald_eff * AR_tail ) * ( tail_area / S_ref )
+
+    return CD_trim
