@@ -258,28 +258,3 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     print("Total Hybrid Weight (lbf): ", total_hybrid_weight)
 
     return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight
-
-c = -0.0866                     #Roskam Vol 1 Table 3.5 (For a regional Turboprop)
-d = 0.8099                      #Roskam Vol 1 Table 3.5 (For a regional Turboprop)
-c_f = 0.0026                    #Raymer 2012 Table 12.3
-
-SFC = 0.4                       #Metabook (Mattingly 1996 Fig 1.17b) lbm / (hp * hr)
-eta = 0.9                       #Propeller Efficency?
-
-# Setting Variables From OpenVSP (VT-V1)
-AR = 10.06133                   #Aspect Ratio
-Span = 96.428                   #Wing Span (ft)
-Wing_area = 805.06              #Wing Area (ft^2)
-
-MTOW = 82561.08                 #Max Takeoff Weight (lbs)
-MPOW = 7000                     #Hp Check Value!!!!!!!!!!!
-R = 500 * 6076.12               #Range (ft)
-h_cruise = 28000                #Cruising Altitude (ft)!!!!!!
-V_cruise = 350 * 1.688 
-
-segments = 20
-
-#Start Warmup Taxi, Takeoff, Climb, Cruise, Descent, Landing (Loitter Unavaliable)
-hybridization_factors = (0.2, 0.2, 0, 0, 0.5, 0.5)
-
-SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight = Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_cruise, hybridization_factors)
