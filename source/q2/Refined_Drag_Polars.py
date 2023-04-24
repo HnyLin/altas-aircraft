@@ -2,8 +2,8 @@
 Account for:
 Zero Lift Drag
 Drag due to Flaps
-Lift Induced Drag
 Trim Drag
+Lift Induced Drag
 
 Required Drag Curves
 Clean
@@ -40,14 +40,16 @@ def get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle):
     return delta_CD_flap
 
 #Calculating Trim Drag
-def get_CD_trim(length_wingac_to_tailac, tail_area, S_ref, mean_chord):
+def get_CD_trim(length_wingac_to_tailac, length_wingac_cg, CL_w, CM_ac_minus_t, tail_area, S_ref, mean_chord, AR_tail):
 
     V_HT = length_wingac_to_tailac * tail_area / ( S_ref * mean_chord )
 
-    CL_t = ( CL_w * length_wingac_cg / mean_chord + CM_ac_minus_t ) * length_wingac_to_tailac / ( length_wingac_to_tailac - lenth_wingac_cg ) * 1 / V_HT
+    CL_t = ( CL_w * length_wingac_cg / mean_chord + CM_ac_minus_t ) * length_wingac_to_tailac / ( length_wingac_to_tailac - length_wingac_cg ) * 1 / V_HT
 
-    oswald_eff = 1.78 * ( 1 - 0.045 * AR_tail ** 0.68 - 0.64 )
+    oswald_eff = 1.78 * ( 1 - 0.045 * AR_tail ** 0.68 ) - 0.64 
 
     CD_trim = CL_t ** 2 / ( np.pi * oswald_eff * AR_tail ) * ( tail_area / S_ref )
 
     return CD_trim
+
+#Induced Drag (From AVL)
