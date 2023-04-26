@@ -17,7 +17,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #Calculating Skin Friction Coefficent
-def get_C_f(altitude, velocity, char_length, percent_lam_flow):
+def get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals):
 
     #Fixed Values
     gamma = 1.4
@@ -37,27 +37,27 @@ def get_C_f(altitude, velocity, char_length, percent_lam_flow):
     T = np.interp(altitude, h_interp, t_interp)
     viscosity = np.interp(altitude, h_interp, mu_interp)
 
-    Reynolds_component = rho * velocity * char_length / viscosity * 32.174
+    Reynolds_component = rho * velocity * char_length_vals / viscosity * 32.174
 
-    C_f_laminar = 1.328 / np.sqrt(Reynolds_component)
+    C_f_laminar_vals = 1.328 / np.sqrt(Reynolds_component)
 
     speed_of_sound = np.sqrt(R * T * gamma * 32.174)
 
     Mach_num = velocity / speed_of_sound
 
-    C_f_turbulent = 0.455 / ( np.log10(Reynolds_component) ** 2.58 * ( 1 + 0.144 * Mach_num ** 2) ** 0.65 )
+    C_f_turbulent_vals = 0.455 / ( np.log10(Reynolds_component) ** 2.58 * ( 1 + 0.144 * Mach_num ** 2) ** 0.65 )
 
-    C_f = C_f_laminar * (percent_lam_flow) + C_f_turbulent * ( 1 - percent_lam_flow)
+    C_f_vals = C_f_laminar_vals * (percent_lam_flow_vals) + C_f_turbulent_vals * ( 1 - percent_lam_flow_vals)
 
-    return C_f
+    return C_f_vals
 
 #Calculating Zero Lift Drag
 def get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals):
 
     #Miscellaneous Form Drag
-    CD_miss = 1 / S_ref * sum(drag_area_vals)
+    CD_miss = 1 / S_ref * np.sum(drag_area_vals)
 
-    CD_0 = 1 / S_ref * sum(skin_friction_coefficent_vals * form_factor_vals * interference_factor_vals * wetted_area_vals) + CD_miss
+    CD_0 = 1 / S_ref * np.sum(skin_friction_coefficent_vals * form_factor_vals * interference_factor_vals * wetted_area_vals) + CD_miss
 
     #Leak and Proturbance Drag (Est 5 - 10% of total parasite drag)
     CD_LP = 0.075 * CD_0
