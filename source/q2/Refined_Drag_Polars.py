@@ -16,6 +16,27 @@ Landing Flaps, gear Down
 import numpy as np
 import matplotlib.pyplot as plt
 
+#Calculating Skin Friction Coefficent
+def get_C_f(rho, velocity, char_length, viscosity, T, percent_lam_flow):
+
+    #Fixed Values
+    gamma = 1.4
+    R = 53.35               #ft*lbf/(lbm * R)
+
+    Reynolds_component = rho * velocity * char_length / viscosity
+
+    C_f_laminar = 1.328 / np.sqrt(Reynolds_component)
+
+    speed_of_sound = np.sqrt(R * T * gamma)
+
+    Mach_num = velocity / speed_of_sound
+
+    C_f_turbulent = 0.455 / ( np.log10(Reynolds_component) ** 2.58 * ( 1 + 0.144 * Mach_num ** 2) ** 0.65 )
+
+    C_f = C_f_laminar * (percent_lam_flow) + C_f_turbulent * ( 1 - percent_lam_flow)
+
+    return C_f
+
 #Calculating Zero Lift Drag
 def get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals):
 
