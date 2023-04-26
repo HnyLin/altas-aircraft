@@ -28,7 +28,7 @@ def get_C_f(altitude, velocity, char_length, percent_lam_flow):
     t_interp = np.array([59, 23.36, -12.26, -47.83, -69.70])
     t_interp = t_interp + 459.67                                #Rankine Conversion
     mu_interp = np.array([3.737, 3.534, 3.324, 3.107, 2.969])
-    mu_interp = mu_interp * 10 ** (-7)                          #lbm * s/ft^2
+    mu_interp = mu_interp * 10 ** (-7)                          #slug / (ft*s)
 
     h_interp = [0, 10000, 20000, 30000, 40000]
 
@@ -37,11 +37,11 @@ def get_C_f(altitude, velocity, char_length, percent_lam_flow):
     T = np.interp(altitude, h_interp, t_interp)
     viscosity = np.interp(altitude, h_interp, mu_interp)
 
-    Reynolds_component = rho * velocity * char_length / viscosity
+    Reynolds_component = rho * velocity * char_length / viscosity * 32.174
 
     C_f_laminar = 1.328 / np.sqrt(Reynolds_component)
 
-    speed_of_sound = np.sqrt(R * T * gamma * 32.17)
+    speed_of_sound = np.sqrt(R * T * gamma * 32.174)
 
     Mach_num = velocity / speed_of_sound
 
