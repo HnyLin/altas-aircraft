@@ -90,16 +90,16 @@ def get_CD_trim(length_wingac_to_tailac, length_wingac_cg, CL_w, CM_ac_minus_t, 
 #Induced Drag (From AVL)
 
 
-#Flight Phases 
-
 #Aircraft Geometry
 
 #Gneral Parameters
-V_stall = 121               #ft/s
-V_takeoff = 1.3 * V_stall   #ft/s
+V_stall = 121                       #ft/s
+V_takeoff_landing = 1.3 * V_stall   #ft/s
+h_takeoff_landing = 0               #ft
 
 #Clean (Cruise)
 V_cruise = 350 * 1.688      #ft/s
+h_cruise = 28000            #ft
 
 #Takeoff Flaps, Gear Up
 
