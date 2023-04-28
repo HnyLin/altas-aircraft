@@ -31,6 +31,8 @@ def getMach(altitude, velocity):
 
     speed_of_sound = np.sqrt(R * T * gamma * 32.174)
 
+    print("Speed of Sound: ", speed_of_sound)
+
     Mach_num = velocity / speed_of_sound
 
     return Mach_num
@@ -118,20 +120,28 @@ def get_CD_trim(length_wingac_to_tailac, length_wingac_cg, CL_w, CM_ac_minus_t, 
 MTOW = 67551                        #lbf
 S_ref = 805.06                      #ft^2
 
+V_cruise = 350 * 1.688      #ft/s
 V_stall = 121                       #ft/s
 V_takeoff_landing = 1.3 * V_stall   #ft/s
-h_takeoff_landing = 0               #ft
+h_takeoff_landing = 5000            #ft
+h_cruise = 28000                    #ft
 
+Mach_takeoff_landing = getMach(5000, V_takeoff_landing)
+print("Mach Takeoff Landing: ", Mach_takeoff_landing)
+
+Mach_cruise = getMach(28000, V_cruise)
+print('Mach Cruise: ', Mach_cruise)
 
 #Component Data
-#[Wing, Winglet, Nacelle, Fueselage, Empennage]
-char_length_vals = np.array([])
+#[Wing Section 1, Wing Section 2, V Tail, H Tail, Winglet, Nacelle, Fueselage]
 
-percent_lam_flow_vals = np.array( [0.5, 0.5, 0.25, 0.25, 0.5] )
+char_length_vals = np.array([11.904, 7.0956, 18.32, 5.584, 2.3196, 14.167, 81])
 
-wetted_area_vals = np.array( [1667.38, 46.496, 52.454, 2093] )      #Missing Empennage
+percent_lam_flow_vals = np.array( [0.5, 0.5, 0.5, 0.5, 0.5, 0.25, 0.25] )
 
-interference_factor_vals = np.array( [1, 1, 1.5, 1] )               #Missing Empennage
+wetted_area_vals = np.array( [] )      
+
+interference_factor_vals = np.array( [1, 1, 1, 1, 1, 1.5, 1] )               
 
 form_factor_vals_takeoff_landing = np.array( [] )                   #Spreadsheet Short Wing FF and Empennage FF
 
@@ -142,7 +152,15 @@ form_factor_vals_cruise = np.array( [] )
 
 #Calculating Coefifecent of Friction Values
 
-Cf_vals = get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals)
+altitude = h_takeoff_landing
+velocity = V_takeoff_landing
+Cf_vals_takeoff_landing = get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals)
+print("Cf Takeoff Landing:", Cf_vals_takeoff_landing)
+
+altitude = h_cruise
+velocity = V_cruise
+Cf_vals_cruise = get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals)
+print("Cf Cruise: ", Cf_vals_cruise)
 
 #Clean (Cruise)
 V_cruise = 350 * 1.688      #ft/s
@@ -157,3 +175,4 @@ flap_angle_takeoff = 30     #degrees
 flap_angle_landing = 70     #degrees
 
 #Landing Flaps, gear Down
+
