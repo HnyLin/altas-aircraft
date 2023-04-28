@@ -15,6 +15,7 @@ Landing Flaps, gear Down
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 def getMach(altitude, velocity):
 
@@ -88,7 +89,7 @@ def get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_v
     return CD_0
 
 #Calculating Flap Drag
-def get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle):
+def get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle, slat_length, slatted_area):
 
     #Flap Angle Degrees to Rad
     flap_angle = flap_angle * np.pi / 180
@@ -118,7 +119,8 @@ def get_CD_trim(length_wingac_to_tailac, length_wingac_cg, CL_w, CM_ac_minus_t, 
     return CD_trim
 
 #Induced Drag (From AVL)
-
+df = pd.read_excel('Induced_Drag_Data.xlsx', sheet_name='Landing')
+print(df)
 
 #Aircraft Geometry
 
@@ -153,7 +155,7 @@ form_factor_vals_takeoff_landing = np.array( [1.33018616, 1.325467794, 1.2610233
 
 form_factor_vals_cruise = np.array( [1.425822647, 1.419737634, 1.33662719, 1.373882348, 1.3340349, 1.058329216, 1.133150585] )
 
-drag_area_vals_geardown = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2) * 91, 0.15, 0.15, 0.25])
+drag_area_vals_geardown = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2), 0.15, 0.15, 0.25]) * 91
 
 drag_area_vals_gearup = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2) * 91])
 
@@ -186,17 +188,28 @@ print("CD_0 Landing Takeoff (Gear Down): ", CD_0_takeoff_landing_geardown)
 #Zero Lift Drag (Cruise)
 skin_friction_coefficent_vals = Cf_vals_cruise
 form_factor_vals = form_factor_vals_cruise
-drag_area_vals = drag_area_vals_geardown
+drag_area_vals = drag_area_vals_gearup
 CD_0_cruise = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
 print("CD_0 Cruise: ", CD_0_cruise)
 
 #Calculating Flap Drag (Takeoff)
-flap_angle_takeoff = 30     #degrees
+flap_angle_takeoff = 30             #degrees
+flap_length = (5.187 + 4.016) /2    #ft
+chord = (12.829 + 10.997) /2        #ft
+flapped_area = 122.73               #ft^2
+flap_angle = flap_angle_takeoff
+slat_angle = 0                          #No Slats
+slat_length = 0                         #No Slats
+slatted_area = 0                        #No Slats
+delta_CD_flap_slat_takeoff = get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle, slat_length, slatted_area)
 
-delta_CD_flap_slat_takeoff = get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle)
+print("Delta C_D Flaps and Slats (Takeoff): ", delta_CD_flap_slat_takeoff)
 
 #Calculating Flap Drag (Landing)
 flap_angle_landing = 70     #degrees
+delta_CD_flap_slat_landing = get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle, slat_length, slatted_area)
+
+print("Delta C_D Flaps and Slats (Takeoff): ", delta_CD_flap_slat_landing)
 
 #Clean (Cruise)
 
