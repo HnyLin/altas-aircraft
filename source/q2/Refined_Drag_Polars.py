@@ -68,6 +68,9 @@ def get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_v
 
 #Calculating Flap Drag
 def get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle):
+
+    #Flap Angle Degrees to Rad
+    flap_angle = flap_angle * np.pi / 180
     
     #For a plain and split flap
     delta_CD_flap = 1.7 * ( flap_length / chord ) ** 1.38 * (flapped_area / S_ref) * np.sin(flap_angle) ** 2
@@ -93,6 +96,15 @@ def get_CD_trim(length_wingac_to_tailac, length_wingac_cg, CL_w, CM_ac_minus_t, 
 #Aircraft Geometry
 
 #Gneral Parameters
+# MTOW = 67551                        #lbf
+# CL_takeoff_landing = 3.3
+# h_takeoff_landing = 0               #ft
+# rho_takeoff_landing = 0.765         #lbm / ft^3
+# S_ref = 805.06                      #ft^2
+
+# V_stall = np.sqrt(MTOW * 32.174 / (CL_takeoff_landing * rho_takeoff_landing * S_ref) )      #ft/s
+# print(V_stall)
+
 V_stall = 121                       #ft/s
 V_takeoff_landing = 1.3 * V_stall   #ft/s
 h_takeoff_landing = 0               #ft
@@ -102,9 +114,11 @@ V_cruise = 350 * 1.688      #ft/s
 h_cruise = 28000            #ft
 
 #Takeoff Flaps, Gear Up
+flap_angle_takeoff = 30     #degrees
 
 #Takeoff Flaps, Gear Down
 
 #Landing Flaps, Gear Up
+flap_angle_landing = 70     #degrees
 
 #Landing Flaps, gear Down
