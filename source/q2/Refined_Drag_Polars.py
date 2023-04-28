@@ -119,8 +119,32 @@ def get_CD_trim(length_wingac_to_tailac, length_wingac_cg, CL_w, CM_ac_minus_t, 
     return CD_trim
 
 #Induced Drag (From AVL)
-df = pd.read_excel('Induced_Drag_Data.xlsx', sheet_name='Landing')
-print(df)
+#Landing
+df = pd.read_excel(r'C:\Users\henry\OneDrive\Documents\EAE130B\atlas-aircraft\source\q2\Induced_Drag_Data.xlsx', sheet_name='Landing', )
+CD_i_landing_vals = df['CD_i']
+Cl_max_landing_vals = df['Clmax']
+
+CD_i_landing_vals = CD_i_landing_vals.to_numpy()
+Cl_max_landing_vals = Cl_max_landing_vals.to_numpy()
+
+#Takeoff
+df = pd.read_excel(r'C:\Users\henry\OneDrive\Documents\EAE130B\atlas-aircraft\source\q2\Induced_Drag_Data.xlsx', sheet_name='Takeoff', )
+CD_i_takeoff_vals = df['CD_i']
+Cl_max_takeoff_vals = df['Clmax']
+
+CD_i_takeoff_vals = CD_i_takeoff_vals.to_numpy()
+Cl_max_takeoff_vals = Cl_max_takeoff_vals.to_numpy()
+
+#Clean
+df = pd.read_excel(r'C:\Users\henry\OneDrive\Documents\EAE130B\atlas-aircraft\source\q2\Induced_Drag_Data.xlsx', sheet_name='Clean', )
+CD_i_clean_vals = df['CD_i']
+Cl_max_clean_vals = df['Clmax']
+
+CD_i_clean_vals = CD_i_clean_vals.to_numpy()
+Cl_max_clean_vals = Cl_max_clean_vals.to_numpy()
+
+
+
 
 #Aircraft Geometry
 
@@ -209,17 +233,65 @@ print("Delta C_D Flaps and Slats (Takeoff): ", delta_CD_flap_slat_takeoff)
 flap_angle_landing = 70     #degrees
 delta_CD_flap_slat_landing = get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle, slat_length, slatted_area)
 
-print("Delta C_D Flaps and Slats (Takeoff): ", delta_CD_flap_slat_landing)
+print("Delta C_D Flaps and Slats (Landing): ", delta_CD_flap_slat_landing)
 
 #Clean (Cruise)
+CL_clean = Cl_max_clean_vals
+CD_clean = CD_i_clean_vals + CD_0_cruise
 
 #Takeoff Flaps, Gear Up
-
+CL_takeoff_gearup = Cl_max_takeoff_vals
+CD_takeoff_gearup = CD_i_takeoff_vals + CD_0_takeoff_landing_gearup + delta_CD_flap_slat_takeoff
 
 #Takeoff Flaps, Gear Down
+CL_takeoff_geardown = Cl_max_takeoff_vals
+CD_takeoff_geardown = CD_i_takeoff_vals + CD_0_takeoff_landing_geardown + delta_CD_flap_slat_takeoff
 
 #Landing Flaps, Gear Up
-
+CL_landing_gearup = Cl_max_landing_vals
+CD_landing_gearup = CD_i_landing_vals + CD_0_takeoff_landing_gearup + delta_CD_flap_slat_landing
 
 #Landing Flaps, gear Down
+CL_landing_geardown = Cl_max_landing_vals
+CD_landing_geardown = CD_i_landing_vals + CD_0_takeoff_landing_geardown + delta_CD_flap_slat_landing
 
+#Plotting
+#Takeoff Gear Up
+plt.figure(figsize=(12, 12))
+plt.plot(CD_takeoff_gearup, CL_takeoff_gearup)
+plt.ylabel("$C_L$")
+plt.xlabel("$C_D$")
+plt.title("$C_L$ vs $C_D$ Takeoff Gear Up")
+plt.show()
+
+#Takeoff Gear Down
+plt.figure(figsize=(12, 12))
+plt.plot(CD_takeoff_geardown, CL_takeoff_geardown)
+plt.ylabel("$C_L$")
+plt.xlabel("$C_D$")
+plt.title("$C_L$ vs $C_D$ Takeoff Gear Down")
+plt.show()
+
+#Landing Gear Up
+plt.figure(figsize=(12, 12))
+plt.plot(CD_landing_gearup, CL_landing_gearup)
+plt.ylabel("$C_L$")
+plt.xlabel("$C_D$")
+plt.title("$C_L$ vs $C_D$ Landing Gear Up")
+plt.show()
+
+#Landing Gear Down
+plt.figure(figsize=(12, 12))
+plt.plot(CD_landing_geardown, CL_landing_geardown)
+plt.ylabel("$C_L$")
+plt.xlabel("$C_D$")
+plt.title("$C_L$ vs $C_D$ Landing Gear Down")
+plt.show()
+
+#Clean
+plt.figure(figsize=(12, 12))
+plt.plot(CD_clean, CL_clean)
+plt.ylabel("$C_L$")
+plt.xlabel("$C_D$")
+plt.title("$C_L$ vs $C_D$ Clean")
+plt.show()
