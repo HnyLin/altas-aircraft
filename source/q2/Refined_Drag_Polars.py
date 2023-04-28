@@ -16,6 +16,25 @@ Landing Flaps, gear Down
 import numpy as np
 import matplotlib.pyplot as plt
 
+def getMach(altitude, velocity):
+
+    #Fixed Values
+    gamma = 1.4
+    R = 53.35                                                   #ft*lbf/(lbm * R)
+
+    #Atmophereic Data
+    t_interp = np.array([59, 23.36, -12.26, -47.83, -69.70])
+    t_interp = t_interp + 459.67                                #Rankine Conversion
+    h_interp = [0, 10000, 20000, 30000, 40000]                  #ft
+
+    T = np.interp(altitude, h_interp, t_interp)
+
+    speed_of_sound = np.sqrt(R * T * gamma * 32.174)
+
+    Mach_num = velocity / speed_of_sound
+
+    return Mach_num
+
 #Calculating Skin Friction Coefficent
 def get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals):
 
@@ -96,18 +115,34 @@ def get_CD_trim(length_wingac_to_tailac, length_wingac_cg, CL_w, CM_ac_minus_t, 
 #Aircraft Geometry
 
 #Gneral Parameters
-# MTOW = 67551                        #lbf
-# CL_takeoff_landing = 3.3
-# h_takeoff_landing = 0               #ft
-# rho_takeoff_landing = 0.765         #lbm / ft^3
-# S_ref = 805.06                      #ft^2
-
-# V_stall = np.sqrt(MTOW * 32.174 / (CL_takeoff_landing * rho_takeoff_landing * S_ref) )      #ft/s
-# print(V_stall)
+MTOW = 67551                        #lbf
+S_ref = 805.06                      #ft^2
 
 V_stall = 121                       #ft/s
 V_takeoff_landing = 1.3 * V_stall   #ft/s
 h_takeoff_landing = 0               #ft
+
+
+#Component Data
+#[Wing, Winglet, Nacelle, Fueselage, Empennage]
+char_length_vals = np.array([])
+
+percent_lam_flow_vals = np.array( [0.5, 0.5, 0.25, 0.25, 0.5] )
+
+wetted_area_vals = np.array( [1667.38, 46.496, 52.454, 2093] )      #Missing Empennage
+
+interference_factor_vals = np.array( [1, 1, 1.5, 1] )               #Missing Empennage
+
+form_factor_vals_takeoff_landing = np.array( [] )                   #Spreadsheet Short Wing FF and Empennage FF
+
+form_factor_vals_cruise = np.array( [] )
+
+
+
+
+#Calculating Coefifecent of Friction Values
+
+Cf_vals = get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals)
 
 #Clean (Cruise)
 V_cruise = 350 * 1.688      #ft/s
