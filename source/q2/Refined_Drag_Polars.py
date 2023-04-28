@@ -153,9 +153,9 @@ form_factor_vals_takeoff_landing = np.array( [1.33018616, 1.325467794, 1.2610233
 
 form_factor_vals_cruise = np.array( [1.425822647, 1.419737634, 1.33662719, 1.373882348, 1.3340349, 1.058329216, 1.133150585] )
 
-drag_area_vals_landing_takeoff = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2) * 91, 0.15, 0.15, 0.25])
+drag_area_vals_geardown = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2) * 91, 0.15, 0.15, 0.25])
 
-drag_area_vals_cruise = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2) * 91])
+drag_area_vals_gearup = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2) * 91])
 
 #Calculating Coefifecent of Friction Values
 
@@ -169,29 +169,44 @@ velocity = V_cruise
 Cf_vals_cruise = get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals)
 print("Cf Cruise: ", Cf_vals_cruise)
 
-#Zero Lift Drag (Takeoff Landing)
+#Zero Lift Drag (Takeoff Landing (Gearup) )
 skin_friction_coefficent_vals = Cf_vals_takeoff_landing
 form_factor_vals = form_factor_vals_takeoff_landing
-drag_area_vals = drag_area_vals_landing_takeoff
-CD_0_takeoff_landing = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
-print("CD_0 Landing Takeoff: ", CD_0_takeoff_landing)
+drag_area_vals = drag_area_vals_gearup
+CD_0_takeoff_landing_gearup = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
+print("CD_0 Landing Takeoff (Gearup): ", CD_0_takeoff_landing_gearup)
+
+#Zero Lift Drag (Takeoff Landing (Gear Down) )
+skin_friction_coefficent_vals = Cf_vals_takeoff_landing
+form_factor_vals = form_factor_vals_takeoff_landing
+drag_area_vals = drag_area_vals_geardown
+CD_0_takeoff_landing_geardown = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
+print("CD_0 Landing Takeoff (Gear Down): ", CD_0_takeoff_landing_geardown)
 
 #Zero Lift Drag (Cruise)
 skin_friction_coefficent_vals = Cf_vals_cruise
 form_factor_vals = form_factor_vals_cruise
-drag_area_vals = drag_area_vals_cruise
+drag_area_vals = drag_area_vals_geardown
 CD_0_cruise = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
 print("CD_0 Cruise: ", CD_0_cruise)
+
+#Calculating Flap Drag (Takeoff)
+flap_angle_takeoff = 30     #degrees
+
+delta_CD_flap_slat_takeoff = get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle)
+
+#Calculating Flap Drag (Landing)
+flap_angle_landing = 70     #degrees
 
 #Clean (Cruise)
 
 #Takeoff Flaps, Gear Up
-flap_angle_takeoff = 30     #degrees
+
 
 #Takeoff Flaps, Gear Down
 
 #Landing Flaps, Gear Up
-flap_angle_landing = 70     #degrees
+
 
 #Landing Flaps, gear Down
 
