@@ -88,15 +88,21 @@ def get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_v
     return CD_0
 
 #Calculating Flap Drag
-def get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle):
+def get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle):
 
     #Flap Angle Degrees to Rad
     flap_angle = flap_angle * np.pi / 180
+    slat_angle = slat_angle * np.pi / 180
     
-    #For a plain and split flap
-    delta_CD_flap = 1.7 * ( flap_length / chord ) ** 1.38 * (flapped_area / S_ref) * np.sin(flap_angle) ** 2
+    #For slotted flaps
+    delta_CD_flap = 0.9 * ( flap_length / chord ) ** 1.38 * (flapped_area / S_ref) * np.sin(flap_angle) ** 2
 
-    return delta_CD_flap
+    #For slotted slats
+    delta_CD_slat = 0.9 * (slat_length / chord) ** 1.38 * (slatted_area / S_ref) * np.sin(slat_angle) ** 2
+
+    delta_CD_flap_slat = delta_CD_flap + delta_CD_slat
+
+    return delta_CD_flap_slat
 
 #Calculating Trim Drag
 def get_CD_trim(length_wingac_to_tailac, length_wingac_cg, CL_w, CM_ac_minus_t, tail_area, S_ref, mean_chord, AR_tail):
@@ -139,15 +145,13 @@ char_length_vals = np.array([11.904, 7.0956, 18.32, 5.584, 2.3196, 14.167, 81])
 
 percent_lam_flow_vals = np.array( [0.5, 0.5, 0.5, 0.5, 0.5, 0.25, 0.25] )
 
-wetted_area_vals = np.array( [] )      
+wetted_area_vals = np.array( [883.718, 839.026, 458.405, 389.813, 46.496, 52.454, 2093] )      
 
 interference_factor_vals = np.array( [1, 1, 1, 1, 1, 1.5, 1] )               
 
-form_factor_vals_takeoff_landing = np.array( [] )                   #Spreadsheet Short Wing FF and Empennage FF
+form_factor_vals_takeoff_landing = np.array( [1.33018616, 1.325467794, 1.261023316, 1.289911252, 1.259013234, 1.058329216, 1.133150585] )
 
-form_factor_vals_cruise = np.array( [] )
-
-
+form_factor_vals_cruise = np.array( [1.425822647, 1.419737634, 1.33662719, 1.373882348, 1.3340349, 1.058329216, 1.133150585] )
 
 
 #Calculating Coefifecent of Friction Values
@@ -163,8 +167,6 @@ Cf_vals_cruise = get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_
 print("Cf Cruise: ", Cf_vals_cruise)
 
 #Clean (Cruise)
-V_cruise = 350 * 1.688      #ft/s
-h_cruise = 28000            #ft
 
 #Takeoff Flaps, Gear Up
 flap_angle_takeoff = 30     #degrees
