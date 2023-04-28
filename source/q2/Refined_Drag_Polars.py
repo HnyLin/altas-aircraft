@@ -180,8 +180,8 @@ print("CD_0 Landing Takeoff: ", CD_0_takeoff_landing)
 skin_friction_coefficent_vals = Cf_vals_cruise
 form_factor_vals = form_factor_vals_cruise
 drag_area_vals = drag_area_vals_cruise
-CD_0_takeoff_landing = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
-print("CD_0 Cruise: ", CD_0_takeoff_landing)
+CD_0_cruise = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
+print("CD_0 Cruise: ", CD_0_cruise)
 
 #Clean (Cruise)
 
