@@ -656,7 +656,10 @@ bound_vals = ((8,15), (0.1, 0.4), (600, 1000), (250, 300), (0, 1), (0, 1), (0, 1
 
 #Optimize
 result = optimize.minimize(objective_function, x0 = initial_guess, bounds = bound_vals)
+print("Optimized Values")
 print(result.x)
+
+print("Optimum Fuel Weight (lbf): ", result.fun)
 #================================================================================================================
 '''
 #Trade Study One AR Sweep
