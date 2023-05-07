@@ -565,17 +565,98 @@ def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4):
 #tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4)
 
 #Trade Study One AR Sweep
-resolution = 100
-MTOW_vals = np.zeros(100)
-MPOW_vals = np.zeros(100)
-total_fuel_burn_vals = np.zeros(100)
-counter = 0
+resolution = 10
+MTOW_vals = np.zeros(resolution)
+MPOW_vals = np.zeros(resolution)
+total_fuel_burn_vals = np.zeros(resolution)
 
-for AR in np.linspace(8, 15, resolution):
+AR_vals = np.linspace(8, 15, resolution)
+
+counter = 0
+for AR in AR_vals:
     MTOW_new, MPOW, total_fuel_burn = tradeStudies(AR, 0.15450, 805.06, 350, 0.2, 0.2, 0.5, 0.5)       #Will Produce results from Weights Refinement
     MTOW_vals[counter] = MTOW_new
     MPOW_vals[counter] = MPOW
     total_fuel_burn_vals[counter] = total_fuel_burn
     counter = counter + 1
-print("MTOW Values: ", MTOW_vals)
-print("Total Fuel Burn Values: ", total_fuel_burn_vals)
+    print("Loop Count:", counter)
+
+passengers = 50
+
+#Plotting
+plt.subplot(2, 1, 1)
+plt.plot(AR_vals, MTOW_vals)
+plt.xlabel("Aspect Ratio")
+plt.ylabel("Maximum Takeoff Weight (lbf)")
+plt.title("AR vs. Maximum Takeoff Weight")
+
+plt.subplot(2, 1, 2)
+plt.plot(AR_vals, total_fuel_burn_vals / passengers)
+plt.xlabel("Aspect Ratio")
+plt.ylabel("Fuel Burn per Passenger Weight (lbf)")
+plt.title("AR vs. Fuel Burn per Passenger")
+plt.show()
+
+#Trade Study Two t_c_root Sweep
+resolution = 10
+MTOW_vals = np.zeros(resolution)
+MPOW_vals = np.zeros(resolution)
+total_fuel_burn_vals = np.zeros(resolution)
+
+t_c_root_vals = np.linspace(0.1, 0.4, resolution)
+
+counter = 0
+for t_c_root  in t_c_root_vals:
+    MTOW_new, MPOW, total_fuel_burn = tradeStudies(10.06, t_c_root, 805.06, 350, 0.2, 0.2, 0.5, 0.5)       #Will Produce results from Weights Refinement
+    MTOW_vals[counter] = MTOW_new
+    MPOW_vals[counter] = MPOW
+    total_fuel_burn_vals[counter] = total_fuel_burn
+    counter = counter + 1
+    print("Loop Count:", counter)
+
+#Plotting
+plt.subplot(2, 1, 1)
+plt.plot(t_c_root_vals, MTOW_vals)
+plt.xlabel("Root Thickness / Chord")
+plt.ylabel("Maximum Takeoff Weight (lbf)")
+plt.title("t/c vs. Maximum Takeoff Weight")
+
+plt.subplot(2, 1, 2)
+plt.plot(t_c_root_vals, total_fuel_burn_vals / passengers)
+plt.xlabel("Root Thickness / Chord")
+plt.ylabel("Fuel Burn per Passenger Weight (lbf)")
+plt.title("t/c vs. Fuel Burn per Passenger")
+
+plt.show()
+
+#Trade Study Three Wing Area Sweep
+resolution = 10
+MTOW_vals = np.zeros(resolution)
+MPOW_vals = np.zeros(resolution)
+total_fuel_burn_vals = np.zeros(resolution)
+
+wing_area_vals = np.linspace(600, 1000, resolution)
+counter = 0 
+
+for Wing_area in wing_area_vals:
+    MTOW_new, MPOW, total_fuel_burn = tradeStudies(10.06, 0.15450, Wing_area, 350, 0.2, 0.2, 0.5, 0.5)       #Will Produce results from Weights Refinement
+    MTOW_vals[counter] = MTOW_new
+    MPOW_vals[counter] = MPOW
+    total_fuel_burn_vals[counter] = total_fuel_burn
+    counter = counter + 1
+    print("Loop Count:", counter)
+
+#Plotting
+plt.subplot(2, 1, 1)
+plt.plot(wing_area_vals, MTOW_vals)
+plt.xlabel("Wing Area (ft^2)")
+plt.ylabel("Maximum Takeoff Weight (lbf)")
+plt.title("Wing Area vs. Maximum Takeoff Weight")
+
+plt.subplot(2, 1, 2)
+plt.plot(wing_area_vals, total_fuel_burn_vals / passengers)
+plt.xlabel("Wing Area (ft^2)")
+plt.ylabel("Fuel Burn per Passenger Weight (lbf)")
+plt.title("Wing Area vs. Fuel Burn per Passenger")
+
+plt.show()
