@@ -128,7 +128,7 @@ CD_i_landing_vals = CD_i_landing_vals.to_numpy()
 Cl_max_landing_vals = Cl_max_landing_vals.to_numpy()
 
 #Takeoff
-df = pd.read_excel(r'C:\Users\henry\OneDrive\Documents\EAE130B\atlas-aircraft\source\q2\Induced_Drag_Data.xlsx', sheet_name='Takeoff', )
+df = pd.read_excel(r'source\q2\Induced_Drag_Data.xlsx', sheet_name='Takeoff', )
 CD_i_takeoff_vals = df['CD_i']
 Cl_max_takeoff_vals = df['Clmax']
 
