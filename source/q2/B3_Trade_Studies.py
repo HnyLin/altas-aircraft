@@ -9,6 +9,7 @@ A, t_c_root, need to go back through B1
 import numpy as np
 import matplotlib.pyplot as plt
 import Fuel_Burn_Calculator_Standalone as FBC
+import scipy
 '''
 I apologize to whoever gets to read this, go to the bottom to see loop. This script combines 
 Henry's fuel/battery function and my empty weight function  to calculate, and iterate on, the MTOW.
@@ -563,6 +564,10 @@ def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4):
 
 #Test function
 #tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4)
+
+#SCIPY Optimzation
+
+#================================================================================================================
 
 #Trade Study One AR Sweep
 resolution = 10
