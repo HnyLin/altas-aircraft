@@ -9,7 +9,7 @@ A, t_c_root, need to go back through B1
 import numpy as np
 import matplotlib.pyplot as plt
 import Fuel_Burn_Calculator_Standalone as FBC
-import scipy
+import scipy.optimize as optimize
 '''
 I apologize to whoever gets to read this, go to the bottom to see loop. This script combines 
 Henry's fuel/battery function and my empty weight function  to calculate, and iterate on, the MTOW.
@@ -565,10 +565,100 @@ def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4):
 #Test function
 #tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4)
 
+passengers = 50
+
 #SCIPY Optimzation
+def objective_function(params):
+    AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4 = params
+    '''
+    Trade Studies Loop. Slight modification of B1_MTOW_Refined.py
+    Takes input variables (for )
+    INPUTS:
+    AR - Wing Aspect Ratio
+    t_c_root - maximum thickness-to-chord ratio (constant along wing)
+    Wing_area - total wing area, ft^2
+    V_cruise - cruise speed, knts
+    h1, h2, h3, h4 - hybrid. factors for Warmup Taxi, Takeoff, Descent, Landing (climb and cruise are zero hybrid)
 
+    OUTPUTS:
+    Weight Breakdown
+    Fuel Breakdown
+
+
+    COMMENTS:
+    1) May want to suppress some of the printed results, can be a lot when rerunning code
+
+    2) Tried but commented out code that tries to evaluate change in one variable (ex. AR vs MTOW) for a more simple trade study
+    
+    3) Made wing span variable with in code, which is calucalated from AR and wing area
+    '''
+    c = -0.0866                     #Roskam Vol 1 Table 3.5 (For a regional Turboprop)
+    d = 0.8099                      #Roskam Vol 1 Table 3.5 (For a regional Turboprop)
+    c_f = 0.0026                    #Raymer 2012 Table 12.3
+
+    SFC = 0.4                       #Metabook (Mattingly 1996 Fig 1.17b) lbm / (hp * hr)
+    eta = 0.9                       #Propeller Efficency?
+
+    # Setting Variables From OpenVSP (VT-V1)
+    #AR = 10.06133                   #Aspect Ratio
+    #Wing_area = 805.06              #Wing Area (ft^2)
+
+    #Span = 96.428                   #Wing Span (ft)
+    Span = np.sqrt(AR*Wing_area)
+
+    MTOW = 82561.08                 #Max Takeoff Weight (lbs)
+    MPOW = 7000                     #Hp Check Value!!!!!!!!!!!
+    R = 500 * 6076.12               #Range (ft)
+    h_cruise = 28000                #Cruising Altitude (ft)!!!!!!
+    V_cruise = V_cruise * 1.688     #Convert V_cruise to ft/s
+
+    segments = 20
+
+    #Start Warmup Taxi, Takeoff, Climb, Cruise, Descent, Landing (Loitter Unavaliable)
+    hybridization_factors = (h1, h2, 0, 0, h3, h4)
+
+    #OTHER VARIABLES FOR LOOP
+    W_P = 11.25     #lbf/hp
+    W_crew_and_payload = 12660      #weight of crew, passengers, and payload, lbs
+
+    #Loop setup
+    tol = 1e-6
+    dif = 1
+    p = 0
+    #MTOW_plot = MTOW
+    while dif > tol:
+    #while p <50:
+        p = p+1
+
+        W_empty= calcEmptyWeight(MTOW, MPOW, AR, t_c_root, Wing_area)
+
+        SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight = Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_cruise, hybridization_factors)
+
+        MTOW_new = W_empty + total_hybrid_weight + W_crew_and_payload
+        dif = abs(MTOW_new - MTOW)
+
+        #MTOW_plot[p] = MTOW_new
+        MTOW = MTOW_new
+
+        MPOW = MTOW/W_P
+
+    #print('New MTOW is: ', MTOW_new)
+    #print('New Power Req is:', MPOW)
+    #print('Difference is: ', dif)
+    #print('Iterations: ;', p)
+    
+    return total_fuel_burn
+#Setting Initial Guess
+initial_guess = [10.06, 0.15450, 805.06, 350, 0.2, 0.2, 0.5, 0.5]
+
+#Setting Bounds
+bound_vals = ((8,15), (0.1, 0.4), (600, 1000), (250, 300), (0, 1), (0, 1), (0, 1), (0, 1))
+
+#Optimize
+result = optimize.minimize(objective_function, x0 = initial_guess, bounds = bound_vals)
+print(result.x)
 #================================================================================================================
-
+'''
 #Trade Study One AR Sweep
 resolution = 10
 MTOW_vals = np.zeros(resolution)
@@ -585,8 +675,6 @@ for AR in AR_vals:
     total_fuel_burn_vals[counter] = total_fuel_burn
     counter = counter + 1
     print("Loop Count:", counter)
-
-passengers = 50
 
 #Plotting
 plt.subplot(2, 1, 1)
@@ -665,3 +753,4 @@ plt.ylabel("Fuel Burn per Passenger Weight (lbf)")
 plt.title("Wing Area vs. Fuel Burn per Passenger")
 
 plt.show()
+'''
