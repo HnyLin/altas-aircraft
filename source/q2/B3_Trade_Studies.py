@@ -567,6 +567,7 @@ def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4):
 
 passengers = 50
 
+
 #SCIPY Optimzation
 def objective_function(params):
     AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4 = params
@@ -663,8 +664,9 @@ print("Optimum Fuel Weight (lbf): ", result.fun)
 print("Optimum Fuel Weight Per Passenger (lbf): ", result.fun/50)
 #================================================================================================================
 
+
 #Trade Study One AR Sweep
-resolution = 10
+resolution = 20
 MTOW_vals = np.zeros(resolution)
 MPOW_vals = np.zeros(resolution)
 total_fuel_burn_vals = np.zeros(resolution)
@@ -681,6 +683,7 @@ for AR in AR_vals:
     print("Loop Count:", counter)
 
 #Plotting
+plt.figure(figsize=(8,12))
 plt.subplot(2, 1, 1)
 plt.plot(AR_vals, MTOW_vals)
 plt.xlabel("Aspect Ratio")
@@ -695,7 +698,6 @@ plt.title("AR vs. Fuel Burn per Passenger")
 plt.show()
 
 #Trade Study Two t_c_root Sweep
-resolution = 10
 MTOW_vals = np.zeros(resolution)
 MPOW_vals = np.zeros(resolution)
 total_fuel_burn_vals = np.zeros(resolution)
@@ -712,6 +714,7 @@ for t_c_root  in t_c_root_vals:
     print("Loop Count:", counter)
 
 #Plotting
+plt.figure(figsize=(8,12))
 plt.subplot(2, 1, 1)
 plt.plot(t_c_root_vals, MTOW_vals)
 plt.xlabel("Root Thickness / Chord")
@@ -727,7 +730,6 @@ plt.title("t/c vs. Fuel Burn per Passenger")
 plt.show()
 
 #Trade Study Three Wing Area Sweep
-resolution = 10
 MTOW_vals = np.zeros(resolution)
 MPOW_vals = np.zeros(resolution)
 total_fuel_burn_vals = np.zeros(resolution)
@@ -744,6 +746,7 @@ for Wing_area in wing_area_vals:
     print("Loop Count:", counter)
 
 #Plotting
+plt.figure(figsize=(8,12))
 plt.subplot(2, 1, 1)
 plt.plot(wing_area_vals, MTOW_vals)
 plt.xlabel("Wing Area (ft^2)")
