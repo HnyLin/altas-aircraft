@@ -443,8 +443,13 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     total_battery_weight = SWT_battery_weight + Takeoff_battery_weight + climb_battery_weight + cruise_battery_weight + descent_battery_weight + landing_battery_weight
     #print("Total Battery Weight (lbf): ", total_battery_weight)
 
-    total_hybrid_weight = total_battery_weight + total_fuel_burn
-    #print("Total Hybrid Weight (lbf): ", total_hybrid_weight)
+    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Changed Battery Weight to Be Greatest Battery Weight of All Phases!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # total_hybrid_weight = total_battery_weight + total_fuel_burn
+    # #print("Total Hybrid Weight (lbf): ", total_hybrid_weight)
+    Battery_Weights = [SWT_battery_weight, Takeoff_battery_weight, climb_battery_weight, cruise_battery_weight, descent_battery_weight, landing_battery_weight]
+    Battery_Weights.sort()
+
+    total_hybrid_weight = total_fuel_burn + Battery_Weights[-1]
 
     return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight
 #================================================================================================================
