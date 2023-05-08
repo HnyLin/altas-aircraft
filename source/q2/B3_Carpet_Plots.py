@@ -6,15 +6,12 @@ e = 0.8
 rho_interp = [0.0765, 0.0565, 0.0408, 0.0287, 0.0189]
 h_interp = [0, 10000, 20000, 30000, 40000]
 rho = np.interp(28000, h_interp, rho_interp)
+
 V = 350 * 1.688 
 n = 7
 
 AR_vals = np.linspace(5, 20, n)
 C_D0_vals = np.linspace(0.005, 0.005*n, n)
-
-shape = (n,2*n)
-# LD_WS = np.ones(shape)
-# count = 0
 
 LD_full = []
 WS_full = []
@@ -35,11 +32,6 @@ for AR in AR_vals:
 
     LD_full = np.append(LD_full, LD_vals)  
     WS_full = np.append(WS_full, WS_vals)
-    # LD_WS[:,count] = LD_vals
-    # LD_WS[:,count+1] = WS_vals
-    
-    # count = count+2
-
 
 AR_vals = np.repeat(AR_vals, n)
 C_D0_vals = np.tile(C_D0_vals, n)
