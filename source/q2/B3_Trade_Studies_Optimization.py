@@ -658,7 +658,7 @@ def objective_function(params):
 initial_guess = [10.06, 0.15450, 805.06, 350, 0.25, 0.25, 0.25, 0.25]
 
 #Setting Bounds
-bound_vals = ((8,20), (0.1, 1), (600, 1000), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1))
+bound_vals = ((8, 13.14), (0.1, 0.25), (600, 1000), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1))
 
 #Optimize
 result = optimize.minimize(objective_function, x0 = initial_guess, bounds = bound_vals, options= {'disp': True} )
@@ -669,6 +669,7 @@ print("Optimum Fuel Weight (lbf): ", result.fun)
 print("Optimum Fuel Weight Per Passenger (lbf): ", result.fun/50)
 #================================================================================================================
 
+'''
 
 #Trade Study One AR Sweep
 resolution = 20
@@ -765,3 +766,5 @@ plt.ylabel("Fuel Burn per Passenger Weight (lbf)")
 plt.title("Wing Area vs. Fuel Burn per Passenger")
 
 plt.show()
+
+'''
