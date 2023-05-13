@@ -1,20 +1,13 @@
-#B3 Trade Studies
-'''
-Base code is from "B1_MTOW_Refined.py"
-Idea is to investigate changes to MTOW and Block Fuel Burn is different geometric designs were pursued.
-In the current iteration of this code, we are investigating varying AR.
-Variables to be changed in Maks code:
-A, t_c_root, need to go back through B1
-'''
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as optimize
 import time
-'''
-I apologize to whoever gets to read this, go to the bottom to see loop. This script combines 
-Henry's fuel/battery function and my empty weight function  to calculate, and iterate on, the MTOW.
-Our takeoff power also iterates with each loop too.
-'''
+import pandas as pd
+
+#Functions
+
+#Optimization Code / Weight Estimate / Fuel Burn Estimate
+#================================================================================================================
 def calcEmptyWeight(W_TO, P_rshp, AR, t_c_root, S_w):
     '''
     Hard coding all constants in this function so you don't need to call them. May or may not be a good idea. 
@@ -622,137 +615,162 @@ def objective_function(params):
     #print('Iterations: ;', p)
     
     return total_fuel_burn
-#Setting Initial Guess
-initial_guess = [12.06, 0.15450, 800, 350, 0.25, 0.25, 0.25, 0.25]
 
-#Setting Bounds
-bound_vals = ((10, 13.14), (0.1, 0.25), (600, 1000), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1))
-
-#Optimize
-start_time = time.time()
-result = optimize.minimize(objective_function, x0 = initial_guess, bounds = bound_vals, options= {'disp': True}, tol = 10 ** -8 )
-end_time = time.time()
-print("Elapsed Timed (min): ", (end_time - start_time)/60)
-print("Optimized Values")
-print(result.x)
-
-print("Optimum Fuel Weight (lbf): ", result.fun)
-print("Optimum Fuel Weight Per Passenger (lbf): ", result.fun/50)
-
-#Variable Extraction / Recalculate MTOW For Minimized Fuel Burn
-AR = result.x[0]
-t_c_root = result.x[1]
-Wing_area = result.x[2]
-V_cruise = result.x[3]
-h1 = result.x[4]
-h2 = result.x[5]
-h3 = result.x[6]
-h4 = result.x[7]
-
-MTOW_new, MPOW, total_fuel_burn = tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4)
-print("Optimized MTOW (lbf): ", MTOW_new)
-print("Optimized MPOW (hp): ", MPOW)
 #================================================================================================================
 
+#Refined Drag Polars
 '''
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Requires Induced_Drag_Data.xlsx (AVL Data) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Account for:
+Zero Lift Drag
+Drag due to Flaps
+Trim Drag
+Lift Induced Drag
 
-#Trade Study One AR Sweep
-resolution = 20
-MTOW_vals = np.zeros(resolution)
-MPOW_vals = np.zeros(resolution)
-total_fuel_burn_vals = np.zeros(resolution)
-
-AR_vals = np.linspace(8, 15, resolution)
-
-counter = 0
-for AR in AR_vals:
-    MTOW_new, MPOW, total_fuel_burn = tradeStudies(AR, 0.15450, 805.06, 350, 0.2, 0.2, 0.5, 0.5)       #Will Produce results from Weights Refinement
-    MTOW_vals[counter] = MTOW_new
-    MPOW_vals[counter] = MPOW
-    total_fuel_burn_vals[counter] = total_fuel_burn
-    counter = counter + 1
-    print("Loop Count:", counter)
-
-#Plotting
-plt.figure(figsize=(8,12))
-plt.subplot(2, 1, 1)
-plt.plot(AR_vals, MTOW_vals)
-plt.xlabel("Aspect Ratio")
-plt.ylabel("Maximum Takeoff Weight (lbf)")
-plt.title("AR vs. Maximum Takeoff Weight")
-
-plt.subplot(2, 1, 2)
-plt.plot(AR_vals, total_fuel_burn_vals / passengers)
-plt.xlabel("Aspect Ratio")
-plt.ylabel("Fuel Burn per Passenger Weight (lbf)")
-plt.title("AR vs. Fuel Burn per Passenger")
-plt.show()
-
-#Trade Study Two t_c_root Sweep
-MTOW_vals = np.zeros(resolution)
-MPOW_vals = np.zeros(resolution)
-total_fuel_burn_vals = np.zeros(resolution)
-
-t_c_root_vals = np.linspace(0.1, 0.4, resolution)
-
-counter = 0
-for t_c_root  in t_c_root_vals:
-    MTOW_new, MPOW, total_fuel_burn = tradeStudies(10.06, t_c_root, 805.06, 350, 0.2, 0.2, 0.5, 0.5)       #Will Produce results from Weights Refinement
-    MTOW_vals[counter] = MTOW_new
-    MPOW_vals[counter] = MPOW
-    total_fuel_burn_vals[counter] = total_fuel_burn
-    counter = counter + 1
-    print("Loop Count:", counter)
-
-#Plotting
-plt.figure(figsize=(8,12))
-plt.subplot(2, 1, 1)
-plt.plot(t_c_root_vals, MTOW_vals)
-plt.xlabel("Root Thickness / Chord")
-plt.ylabel("Maximum Takeoff Weight (lbf)")
-plt.title("t/c vs. Maximum Takeoff Weight")
-
-plt.subplot(2, 1, 2)
-plt.plot(t_c_root_vals, total_fuel_burn_vals / passengers)
-plt.xlabel("Root Thickness / Chord")
-plt.ylabel("Fuel Burn per Passenger Weight (lbf)")
-plt.title("t/c vs. Fuel Burn per Passenger")
-
-plt.show()
-
-#Trade Study Three Wing Area Sweep
-MTOW_vals = np.zeros(resolution)
-MPOW_vals = np.zeros(resolution)
-total_fuel_burn_vals = np.zeros(resolution)
-
-wing_area_vals = np.linspace(600, 1000, resolution)
-counter = 0 
-
-for Wing_area in wing_area_vals:
-    MTOW_new, MPOW, total_fuel_burn = tradeStudies(10.06, 0.15450, Wing_area, 350, 0.2, 0.2, 0.5, 0.5)       #Will Produce results from Weights Refinement
-    MTOW_vals[counter] = MTOW_new
-    MPOW_vals[counter] = MPOW
-    total_fuel_burn_vals[counter] = total_fuel_burn
-    counter = counter + 1
-    print("Loop Count:", counter)
-
-#Plotting
-plt.figure(figsize=(8,12))
-plt.subplot(2, 1, 1)
-plt.plot(wing_area_vals, MTOW_vals)
-plt.xlabel("Wing Area (ft^2)")
-plt.ylabel("Maximum Takeoff Weight (lbf)")
-plt.title("Wing Area vs. Maximum Takeoff Weight")
-
-plt.subplot(2, 1, 2)
-plt.plot(wing_area_vals, total_fuel_burn_vals / passengers)
-plt.xlabel("Wing Area (ft^2)")
-plt.ylabel("Fuel Burn per Passenger Weight (lbf)")
-plt.title("Wing Area vs. Fuel Burn per Passenger")
-
-plt.show()
-
+Required Drag Curves
+Clean
+Takeoff Flaps, Gear Up
+Takeoff Flaps, Gear Down
+Landing Flaps, Gear Up
+Landing Flaps, gear Down
 '''
+def getMach(altitude, velocity):
+
+    #Fixed Values
+    gamma = 1.4
+    R = 53.35                                                   #ft*lbf/(lbm * R)
+
+    #Atmophereic Data
+    t_interp = np.array([59, 23.36, -12.26, -47.83, -69.70])
+    t_interp = t_interp + 459.67                                #Rankine Conversion
+    h_interp = [0, 10000, 20000, 30000, 40000]                  #ft
+
+    T = np.interp(altitude, h_interp, t_interp)
+
+    speed_of_sound = np.sqrt(R * T * gamma * 32.174)
+
+    print("Speed of Sound: ", speed_of_sound)
+
+    Mach_num = velocity / speed_of_sound
+
+    return Mach_num
+
+#Calculating Skin Friction Coefficent
+def get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals):
+
+    #Fixed Values
+    gamma = 1.4
+    R = 53.35               #ft*lbf/(lbm * R)
+
+    #Interpolation Data Bank
+    rho_interp = [0.0765, 0.0565, 0.0408, 0.0287, 0.0189]       #lbm/ft^3
+    t_interp = np.array([59, 23.36, -12.26, -47.83, -69.70])
+    t_interp = t_interp + 459.67                                #Rankine Conversion
+    mu_interp = np.array([3.737, 3.534, 3.324, 3.107, 2.969])
+    mu_interp = mu_interp * 10 ** (-7)                          #slug / (ft*s)
+
+    h_interp = [0, 10000, 20000, 30000, 40000]
+
+    #Interpolates Enviromental Values from Altitude
+    rho = np.interp(altitude, h_interp, rho_interp)
+    T = np.interp(altitude, h_interp, t_interp)
+    viscosity = np.interp(altitude, h_interp, mu_interp)
+
+    Reynolds_component = rho * velocity * char_length_vals / viscosity * 32.174
+
+    C_f_laminar_vals = 1.328 / np.sqrt(Reynolds_component)
+
+    speed_of_sound = np.sqrt(R * T * gamma * 32.174)
+
+    Mach_num = velocity / speed_of_sound
+
+    C_f_turbulent_vals = 0.455 / ( np.log10(Reynolds_component) ** 2.58 * ( 1 + 0.144 * Mach_num ** 2) ** 0.65 )
+
+    C_f_vals = C_f_laminar_vals * (percent_lam_flow_vals) + C_f_turbulent_vals * ( 1 - percent_lam_flow_vals)
+
+    return C_f_vals
+
+#Calculating Zero Lift Drag
+def get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals):
+
+    #Miscellaneous Form Drag
+    CD_miss = 1 / S_ref * np.sum(drag_area_vals)
+
+    CD_0 = 1 / S_ref * np.sum(skin_friction_coefficent_vals * form_factor_vals * interference_factor_vals * wetted_area_vals) + CD_miss
+
+    #Leak and Proturbance Drag (Est 5 - 10% of total parasite drag)
+    CD_LP = 0.075 * CD_0
+
+    CD_0 = CD_0 + CD_LP
+
+    return CD_0
+
+#Calculating Flap Drag
+def get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle, slat_length, slatted_area):
+
+    #Flap Angle Degrees to Rad
+    flap_angle = flap_angle * np.pi / 180
+    slat_angle = slat_angle * np.pi / 180
+    
+    #For slotted flaps
+    delta_CD_flap = 0.9 * ( flap_length / chord ) ** 1.38 * (flapped_area / S_ref) * np.sin(flap_angle) ** 2
+
+    #For slotted slats
+    delta_CD_slat = 0.9 * (slat_length / chord) ** 1.38 * (slatted_area / S_ref) * np.sin(slat_angle) ** 2
+
+    delta_CD_flap_slat = delta_CD_flap + delta_CD_slat
+
+    return delta_CD_flap_slat
+
+#Calculating Trim Drag
+def get_CD_trim(length_wingac_to_tailac, length_wingac_cg, CL_w, CM_ac_minus_t, tail_area, S_ref, mean_chord, AR_tail):
+
+    V_HT = length_wingac_to_tailac * tail_area / ( S_ref * mean_chord )
+
+    CL_t = ( CL_w * length_wingac_cg / mean_chord + CM_ac_minus_t ) * length_wingac_to_tailac / ( length_wingac_to_tailac - length_wingac_cg ) * 1 / V_HT
+
+    oswald_eff = 1.78 * ( 1 - 0.045 * AR_tail ** 0.68 ) - 0.64 
+
+    CD_trim = CL_t ** 2 / ( np.pi * oswald_eff * AR_tail ) * ( tail_area / S_ref )
+
+    return CD_trim
+
+#Induced Drag (From AVL)
+#Landing
+df = pd.read_excel(r'C:\Users\henry\OneDrive\Documents\EAE130B\atlas-aircraft\source\q2\Induced_Drag_Data.xlsx', sheet_name='Landing', )
+CD_i_landing_vals = df['CD_i']
+Cl_max_landing_vals = df['Clmax']
+
+CD_i_landing_vals = CD_i_landing_vals.to_numpy()
+Cl_max_landing_vals = Cl_max_landing_vals.to_numpy()
+
+#Takeoff
+df = pd.read_excel(r'source\q2\Induced_Drag_Data.xlsx', sheet_name='Takeoff', )
+CD_i_takeoff_vals = df['CD_i']
+Cl_max_takeoff_vals = df['Clmax']
+
+CD_i_takeoff_vals = CD_i_takeoff_vals.to_numpy()
+Cl_max_takeoff_vals = Cl_max_takeoff_vals.to_numpy()
+
+#Clean
+df = pd.read_excel(r'C:\Users\henry\OneDrive\Documents\EAE130B\atlas-aircraft\source\q2\Induced_Drag_Data.xlsx', sheet_name='Clean', )
+CD_i_clean_vals = df['CD_i']
+Cl_max_clean_vals = df['Clmax']
+
+CD_i_clean_vals = CD_i_clean_vals.to_numpy()
+Cl_max_clean_vals = Cl_max_clean_vals.to_numpy()
+
+#================================================================================================================
+
+#================================================================================================================
+
+#================================================================================================================
+
+print("========================================================================")
+print("Optimization")
+print("========================================================================")
+
+#Calculating Fuel Burn Per Passenger for Dash 8-q300
 #Dash 8
 #Inputs for a Dash 8-q300
 AR = 13.39
@@ -776,4 +794,66 @@ segments = 30
 
 SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, D8total_fuel_burn, D8total_battery_weight, D8total_hybrid_weight = \
     Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segments, eta, h_cruise, V_cruise, hybridization_factors)
-print("Dash 8-q300 Fuel Weight Per Passenger (lbf): ", D8total_fuel_burn/50)
+
+D8fuel_burn_per_pass = D8total_fuel_burn / 50
+print("Dash 8-q300 Fuel Weight Per Passenger 500 nmi range (lbf): ", round(D8fuel_burn_per_pass, 2))
+
+#================================================================================================================
+
+
+#For Calulating Optimium Aircraft Parameters (Commented Out Due to Long Run Time)
+'''
+#Setting Initial Guess
+initial_guess = [12.06, 0.15450, 800, 350, 0.25, 0.25, 0.25, 0.25]
+
+#Setting Bounds
+bound_vals = ((10, 13.14), (0.1, 0.25), (600, 1000), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1))
+
+#Optimize
+start_time = time.time()
+result = optimize.minimize(objective_function, x0 = initial_guess, bounds = bound_vals, options= {'disp': True}, tol = 10 ** -8 )
+end_time = time.time()
+print("Elapsed Timed (min): ", (end_time - start_time)/60)
+print("Optimized Values")
+print(result.x)
+
+print("Optimum Fuel Weight (lbf): ", result.fun)
+print("Optimum Fuel Weight Per Passenger (lbf): ", result.fun/50)
+
+'''
+#Optimization Results
+optimized_fuel_weight = 3465                #lbf
+MTOW = 40265                                #lbf
+AR = 12.19
+t_c_root = 0.25
+S_ref = 800                                 #ft^2
+V_cruise = 350                              #ktas
+h1 = 0.24                                   #Start Warmup Taxi
+h2 = 0.16                                   #Takeoff
+h3 = 0.37                                   #Descent
+h4 = 0.37                                   #Landing
+
+optimized_fuel_weight_per_pass = optimized_fuel_weight / 50
+print("Optimized Fuel Weight Per Passenger 500 nmi Range (lbf): ", round(optimized_fuel_weight_per_pass, 2))
+
+#Calculating Percent Difference (Block Fuel 500 nmi)
+percent_difference = (optimized_fuel_weight - D8total_fuel_burn) / abs( D8total_fuel_burn ) * 100
+print("Percent Difference in Fuel Burn: ", round(percent_difference, 1))
+#================================================================================================================
+
+#Refined Drag Polars
+print("========================================================================")
+print("Refined Drag Polars")
+print("========================================================================")
+Cl_max = 3.3
+rho_takeoff_landing = 0.0659                #lbm/ft^3
+
+V_stall = np.sqrt( ( 2 * MTOW * 32.174 ) / ( Cl_max * rho_takeoff_landing * S_ref) )
+
+print("Stall Velcocity (ft/s): ", V_stall)
+
+V_takeoff_landing = 1.3 * V_stall   #ft/s
+h_takeoff_landing = 5000            #ft
+h_cruise = 28000                    #ft
+
+#================================================================================================================
