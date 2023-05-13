@@ -856,4 +856,116 @@ V_takeoff_landing = 1.3 * V_stall   #ft/s
 h_takeoff_landing = 5000            #ft
 h_cruise = 28000                    #ft
 
+Mach_takeoff_landing = getMach(5000, V_takeoff_landing)
+Mach_cruise = getMach(28000, V_cruise)
+
+'''
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Revise Component Data !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+'''
+
+#Component Data
+#[Wing Section 1, Wing Section 2, V Tail, H Tail, Winglet, Nacelle, Fueselage]
+
+char_length_vals = np.array([11.904, 7.0956, 18.32, 5.584, 2.3196, 14.167, 81])
+
+percent_lam_flow_vals = np.array( [0.5, 0.5, 0.5, 0.5, 0.5, 0.25, 0.25] )
+
+wetted_area_vals = np.array( [883.718, 839.026, 458.405, 389.813, 46.496, 52.454, 2093] )      
+
+interference_factor_vals = np.array( [1, 1, 1, 1, 1, 1.5, 1] )               
+
+form_factor_vals_takeoff_landing = np.array( [1.33018616, 1.325467794, 1.261023316, 1.289911252, 1.259013234, 1.058329216, 1.133150585] )
+
+form_factor_vals_cruise = np.array( [1.425822647, 1.419737634, 1.33662719, 1.373882348, 1.3340349, 1.058329216, 1.133150585] )
+
+drag_area_vals_geardown = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2), 0.15, 0.15, 0.25]) * 91
+
+drag_area_vals_gearup = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2) * 91])
+
+#Calculating Coefifecent of Friction Values
+
+altitude = h_takeoff_landing
+velocity = V_takeoff_landing
+Cf_vals_takeoff_landing = get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals)
+# print("Cf Takeoff Landing:", Cf_vals_takeoff_landing)
+
+altitude = h_cruise
+velocity = V_cruise
+Cf_vals_cruise = get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals)
+# print("Cf Cruise: ", Cf_vals_cruise)
+
+#Zero Lift Drag (Takeoff Landing (Gearup) )
+skin_friction_coefficent_vals = Cf_vals_takeoff_landing
+form_factor_vals = form_factor_vals_takeoff_landing
+drag_area_vals = drag_area_vals_gearup
+CD_0_takeoff_landing_gearup = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
+# print("CD_0 Landing Takeoff (Gearup): ", CD_0_takeoff_landing_gearup)
+
+#Zero Lift Drag (Takeoff Landing (Gear Down) )
+skin_friction_coefficent_vals = Cf_vals_takeoff_landing
+form_factor_vals = form_factor_vals_takeoff_landing
+drag_area_vals = drag_area_vals_geardown
+CD_0_takeoff_landing_geardown = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
+# print("CD_0 Landing Takeoff (Gear Down): ", CD_0_takeoff_landing_geardown)
+
+#Zero Lift Drag (Cruise)
+skin_friction_coefficent_vals = Cf_vals_cruise
+form_factor_vals = form_factor_vals_cruise
+drag_area_vals = drag_area_vals_gearup
+CD_0_cruise = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
+# print("CD_0 Cruise: ", CD_0_cruise)
+
+#Calculating Flap Drag (Takeoff)
+flap_angle_takeoff = 30             #degrees
+flap_length = (5.187 + 4.016) /2    #ft
+chord = (12.829 + 10.997) /2        #ft
+flapped_area = 122.73               #ft^2
+flap_angle = flap_angle_takeoff
+slat_angle = 0                          #No Slats
+slat_length = 0                         #No Slats
+slatted_area = 0                        #No Slats
+delta_CD_flap_slat_takeoff = get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle, slat_length, slatted_area)
+
+# print("Delta C_D Flaps and Slats (Takeoff): ", delta_CD_flap_slat_takeoff)
+
+#Calculating Flap Drag (Landing)
+flap_angle_landing = 70     #degrees
+delta_CD_flap_slat_landing = get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle, slat_length, slatted_area)
+
+# print("Delta C_D Flaps and Slats (Landing): ", delta_CD_flap_slat_landing)
+
+#Clean (Cruise)
+CL_clean = Cl_max_clean_vals
+CD_clean = CD_i_clean_vals + CD_0_cruise
+
+#Takeoff Flaps, Gear Up
+CL_takeoff_gearup = Cl_max_takeoff_vals
+CD_takeoff_gearup = CD_i_takeoff_vals + CD_0_takeoff_landing_gearup + delta_CD_flap_slat_takeoff
+
+#Takeoff Flaps, Gear Down
+CL_takeoff_geardown = Cl_max_takeoff_vals
+CD_takeoff_geardown = CD_i_takeoff_vals + CD_0_takeoff_landing_geardown + delta_CD_flap_slat_takeoff
+
+#Landing Flaps, Gear Up
+CL_landing_gearup = Cl_max_landing_vals
+CD_landing_gearup = CD_i_landing_vals + CD_0_takeoff_landing_gearup + delta_CD_flap_slat_landing
+
+#Landing Flaps, gear Down
+CL_landing_geardown = Cl_max_landing_vals
+CD_landing_geardown = CD_i_landing_vals + CD_0_takeoff_landing_geardown + delta_CD_flap_slat_landing
+
+
+#Plotting
+#Takeoff Gear Up
+plt.figure(figsize=(12, 12))
+plt.plot(CD_takeoff_gearup, CL_takeoff_gearup, label = "Takeoff Flaps, Gear Up")
+plt.plot(CD_takeoff_geardown, CL_takeoff_geardown, label = "Takeoff Flaps, Gear Down")
+plt.plot(CD_landing_gearup, CL_landing_gearup, label = "Landing Flaps, Gear Up")
+plt.plot(CD_landing_geardown, CL_landing_geardown, label = "Landing Flaps, Gear Down")
+plt.plot(CD_clean, CL_clean, label = "Clean")
+plt.ylabel("$C_L$")
+plt.xlabel("$C_D$")
+plt.title("$C_L$ vs $C_D$ Drag Polars")
+plt.show()
+
 #================================================================================================================
