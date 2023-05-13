@@ -958,8 +958,8 @@ CD_landing_geardown = CD_i_landing_vals + CD_0_takeoff_landing_geardown + delta_
 #Plotting
 #Takeoff Gear Up
 plt.figure(figsize=(12, 12))
-plt.plot(CD_takeoff_gearup, CL_takeoff_gearup, label = "Takeoff Flaps, Gear Up", marker = ".", markersize = 10)
-plt.plot(CD_takeoff_geardown, CL_takeoff_geardown, label = "Takeoff Flaps, Gear Down", marker = ".", markersize = 10)
+plt.plot(CD_takeoff_gearup, CL_takeoff_gearup, label = "Takeoff Flaps, Gear Up", marker = ".", markersize = 15)
+plt.plot(CD_takeoff_geardown, CL_takeoff_geardown, label = "Takeoff Flaps, Gear Down", marker = ".", markersize = 15)
 plt.plot(CD_landing_gearup, CL_landing_gearup, label = "Landing Flaps, Gear Up", marker = ".", markersize = 5)
 plt.plot(CD_landing_geardown, CL_landing_geardown, label = "Landing Flaps, Gear Down", marker = ".", markersize = 5)
 plt.plot(CD_clean, CL_clean, label = "Clean", marker = ".", markersize = 10)
@@ -968,5 +968,7 @@ plt.xlabel("$C_D$")
 plt.title("$C_L$ vs $C_D$ Drag Polars")
 plt.legend()
 plt.show()
+
+#================================================================================================================
 
 #================================================================================================================
