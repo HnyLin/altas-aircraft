@@ -1105,6 +1105,11 @@ h4 = 0.35                                   #Landing
 
 params = [MTOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4, MPOW]
 
+MTOW_new, MPOW, total_fuel_burn, total_battery_weight = tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4)
+print("Optimized MTOW (lbf): ", MTOW_new)
+print("Optimized MPOW (hp): ", MPOW)
+print("Optimized Battery Weight (lbf): ", total_battery_weight)
+
 optimized_fuel_weight_per_pass = optimized_fuel_weight / 50
 print("Optimized Fuel Weight Per Passenger 500 nmi Range (lbf): ", round(optimized_fuel_weight_per_pass, 2))
 
