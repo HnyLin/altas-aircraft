@@ -10,7 +10,7 @@ from labellines import labelLines
 
 #Optimization Code / Weight Estimate / Fuel Burn Estimate
 #================================================================================================================
-def calcEmptyWeight(W_TO, P_rshp, AR, t_c_root, S_w):
+def calcEmptyWeight(W_TO, P_rshp, AR, t_c_root, S_w, display = False):
     '''
     Hard coding all constants in this function so you don't need to call them. May or may not be a good idea. 
     If one wants to change aspects to the design, they would need to edit the code within this function
@@ -188,27 +188,24 @@ def calcEmptyWeight(W_TO, P_rshp, AR, t_c_root, S_w):
 
     W_empty = W_ng + W_ai + W_hyd + W_instr + W_av + W_fs + W_fc + W_encl + W_lg_nose + W_lg_main + W_fuse +  W_HT + W_wing + W_VT
 
-
-    #print('=============================')
-    #print('Summary of Weight Results')
-    #print('=============================')
-    #print('Wing: %0.3f' % W_wing)
-    #print('Vertical Tail: %0.3f' % W_VT)
-    #print('Horizontal Tail: %0.3f' % W_HT)
-    #print('Fuselage: %0.3f' % W_fuse)
-    #print('Main Landing Gear: %0.3f' % W_lg_main)
-    #print('Nose Landing Gear: %0.3f' % W_lg_nose)
-    #print('Engine Controls: %0.3f' % W_encl)
-    #print('Flight Controls: %0.3f' % W_fc)
-    #print('Fuel System: %0.3f' % W_fs)
-    #print('Avionics: %0.3f' % W_av)
-    #print('Instruments: %0.3f' % W_instr)
-    #print('Hydraulics: %0.3f' % W_hyd)
-    #print('Anti-icing: %0.3f' % W_ai)
-    #print('Nacelle Group: %0.3f' % W_ng)
-    #print('=============================')
-    #print('NOW HENRYS RESULTS!')
-    #print('=============================')
+    if display == True:
+        print('=============================')
+        print('Summary of Weight Results')
+        print('=============================')
+        print('Wing: %0.3f' % W_wing)
+        print('Vertical Tail: %0.3f' % W_VT)
+        print('Horizontal Tail: %0.3f' % W_HT)
+        print('Fuselage: %0.3f' % W_fuse)
+        print('Main Landing Gear: %0.3f' % W_lg_main)
+        print('Nose Landing Gear: %0.3f' % W_lg_nose)
+        print('Engine Controls: %0.3f' % W_encl)
+        print('Flight Controls: %0.3f' % W_fc)
+        print('Fuel System: %0.3f' % W_fs)
+        print('Avionics: %0.3f' % W_av)
+        print('Instruments: %0.3f' % W_instr)
+        print('Hydraulics: %0.3f' % W_hyd)
+        print('Anti-icing: %0.3f' % W_ai)
+        print('Nacelle Group: %0.3f' % W_ng)
     return W_empty
 #====================================================
 def HFCA_to_Battery(fuel_weight):
@@ -1119,6 +1116,14 @@ print("---------------------------------------------------------------")
 
 print("Dash 8-q300 500nmi Trip Fuel Burn (lbf): ", round(D8total_fuel_burn, 2) )
 print("Optimized Hybrid Electric 500nmi Trip Fuel Burn (lbf): ", round(optimized_fuel_weight, 2) )
+
+#================================================================================================================
+
+#Component Weights 
+W_TO = MTOW
+P_rshp = MPOW
+S_w = S_ref
+calcEmptyWeight(W_TO, P_rshp, AR, t_c_root, S_w, display = True)
 
 #================================================================================================================
 MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)        #Resets Aircraft Parameters (Safety)
