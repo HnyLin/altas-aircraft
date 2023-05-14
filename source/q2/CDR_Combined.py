@@ -1113,8 +1113,15 @@ print("Optimized Fuel Weight Per Passenger 500 nmi Range (lbf): ", round(optimiz
 
 #Calculating Percent Difference (Block Fuel 500 nmi)
 percent_difference = (optimized_fuel_weight - D8total_fuel_burn) / abs( D8total_fuel_burn ) * 100
-print("Percent Difference in Fuel Burn: ", round(percent_difference, 1))
+print("Percent Difference in Fuel Burn: {}%" .format(round(percent_difference, 1)))
+
+print("---------------------------------------------------------------")
+
+print("Dash 8-q300 500nmi Trip Fuel Burn (lbf): ", round(D8total_fuel_burn, 2) )
+print("Optimized Hybrid Electric 500nmi Trip Fuel Burn (lbf): ", round(optimized_fuel_weight, 2) )
+
 #================================================================================================================
+MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)        #Resets Aircraft Parameters (Safety)
 
 #Refined Drag Polars
 Cl_max = 3.3
@@ -1332,3 +1339,4 @@ wp_TOSL30, wp_TOSL50, wp_TO5K50, wp_cruise, wp_takeoffclimb, wp_transegmentclimb
                   rho_ceiling, C_Lmax, G_climbvals, k_svals, C_D0vals, 
                   C_Lmax_vals, labels, e_vals, w_vals, N_correction)
 #================================================================================================================
+MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)        #Resets Aircraft Parameters (Safety)
