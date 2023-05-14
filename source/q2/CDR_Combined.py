@@ -949,6 +949,77 @@ def reset_parameters(params):
     return MTOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4
 #================================================================================================================
 
+def Get_tc_Vcruise_Carpet(t_c_vals, V_cruise_vals):
+    '''
+    t/c vs V_cruise Carpet Plot on MTOW vs Fuel Burn per seat
+    Sample input: 
+    n = 4
+    t_c_vals = np.linspace(0.05, 0.35, 4)
+    V_cruise_vals = np.linspace(250, 400, 4)
+    Get_tc_Vcruise_Carpet(t_c_vals, V_cruise_vals)
+
+    [1.21917361e+01 2.50000000e-01 8.00029301e+02 3.49318260e+02 2.40070564e-01 1.62047629e-01 3.68159993e-01 3.65350028e-01]
+
+      AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4
+
+    '''
+    totalTakeoffWeight = []
+    totalFuelBurn = []
+
+    for tc in t_c_vals:
+        TakeoffWeight = []
+        FuelBurn = []
+        #index = 0
+        for V in V_cruise_vals:
+            #tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4) # has 3 outputs                
+            x, z, y = tradeStudies(AR, tc, Wing_area, V, h1, h2, h3, h4)      #using optemized values from 5/13 optimization run
+        
+            TakeoffWeight = np.append(TakeoffWeight, x)
+            FuelBurn  = np.append(FuelBurn, y)
+        
+
+        totalTakeoffWeight = np.append(totalTakeoffWeight, TakeoffWeight)
+        totalFuelBurn = np.append(totalFuelBurn, FuelBurn)
+
+    t_c_vals = np.repeat(t_c_vals, len(t_c_vals))
+    V_cruise_vals = np.tile(V_cruise_vals, len(V_cruise_vals))
+
+    fig = go.Figure(go.Carpet(
+        a = t_c_vals,
+        b = V_cruise_vals,
+        y = totalFuelBurn,
+        x = totalTakeoffWeight,
+        aaxis=dict(
+            tickprefix='t/c = ',
+        
+            smoothing=0.2,
+        ),
+        baxis=dict(
+            tickprefix='V_cruise = ',
+            ticksuffix='knts',
+            smoothing=0.4,
+        )
+    ))
+
+    fig.update_layout(
+        xaxis=dict(
+            tickprefix = 'MTOW = ',
+            ticksuffix='lbf',
+            showgrid=True,
+            showticklabels=True
+        ),
+        yaxis=dict(
+        tickprefix = 'Fuel Burn = ',
+        ticksuffix='lbf',
+            showgrid=True,
+            showticklabels=True
+        )
+    )
+  
+    fig.show()
+
+#================================================================================================================
+
 #================================================================================================================
 
 print("========================================================================")
@@ -987,9 +1058,9 @@ print("Dash 8-q300 Fuel Weight Per Passenger 500 nmi range (lbf): ", round(D8fue
 
 
 #For Calulating Optimium Aircraft Parameters (Commented Out Due to Long Run Time)
-'''
+
 #Setting Initial Guess
-initial_guess = [12.06, 0.15450, 800, 350, 0.25, 0.25, 0.25, 0.25]
+initial_guess = [12.06, 0.15450, 700, 350, 0.25, 0.25, 0.25, 0.25]
 
 #Setting Bounds
 bound_vals = ((10, 13.14), (0.1, 0.25), (600, 1000), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1))
@@ -1005,7 +1076,7 @@ print(result.x)
 print("Optimum Fuel Weight (lbf): ", result.fun)
 print("Optimum Fuel Weight Per Passenger (lbf): ", result.fun/50)
 
-'''
+
 #Optimization Results
 optimized_fuel_weight = 3465                #lbf
 MTOW = 40265                                #lbf
@@ -1166,6 +1237,13 @@ n = 7
 AR_vals = np.linspace(5, 20, n)
 C_D0_vals = np.linspace(0.005, 0.005*n, n)
 Get_AR_CD0_Carpet(V_cruise, AR_vals, C_D0_vals, e)
+
+#tc vs V_cruise Carpet Plot (Trade Study)
+n = 4
+t_c_vals = np.linspace(0.05, 0.35, 4)
+V_cruise_vals = np.linspace(250, 400, 4)
+Get_tc_Vcruise_Carpet(t_c_vals, V_cruise_vals)
+
 '''
 #================================================================================================================
 
