@@ -58,7 +58,7 @@ def Get_AR_CD0_Carpet(V_cruise, AR_vals, C_D0_vals, e):
         yaxis=dict(
         tickprefix = 'L/D = ',
             showgrid=True,
-            showticklabels=True
+            showticklabels=True,
         )
     )
     

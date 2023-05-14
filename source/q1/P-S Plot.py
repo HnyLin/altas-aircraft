@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 from labellines import labelLines
 
 #A3 Code
-def tw_wp( WS, nu_p, tw, C_L ):
+def tw_wp( WS, nu_p, tw, C_L, rho ):
+    lbf_lbm = 32.17
     V_cruise = np.sqrt ( 2 / ( rho * C_L ) * WS * lbf_lbm)
     wp = nu_p / V_cruise * (1 / tw)
     return wp
@@ -29,7 +30,7 @@ def get_PS_Plot(weight, precision, lbf_lbm, hp, WS, nu_p, AR, w_to, w_L, BFL, rh
     TOP = BFL / 37.5                            #Check Units
     tw_TO = WS / ( (rho_SL / rho_SL) * C_lmax_TO * TOP)
     
-    wp_TOSL30 = hp * tw_wp( WS, nu_p, tw = tw_TO, C_L = C_lmax_TO)
+    wp_TOSL30 = hp * tw_wp( WS, nu_p, tw = tw_TO, C_L = C_lmax_TO, rho = rho_SL)
     
     plt.plot(weight / WS, weight / wp_TOSL30, label = 'Takeoff Field Length SL 30ft Obsticle')
     
@@ -37,13 +38,13 @@ def get_PS_Plot(weight, precision, lbf_lbm, hp, WS, nu_p, AR, w_to, w_L, BFL, rh
     
     tw_TO = 1 / ( k_2 / ( ( k_1 * WS / ( BFL * rho_SL) + 0.72 * C_d0_TO ) / C_lmax_TO + mu_g ))
     
-    wp_TOSL50 = hp * tw_wp( WS, nu_p, tw = tw_TO, C_L = C_lmax_TO)
+    wp_TOSL50 = hp * tw_wp( WS, nu_p, tw = tw_TO, C_L = C_lmax_TO, rho = rho_SL)
     plt.plot(weight / WS, weight / wp_TOSL50, label = 'Takeoff Field Length SL+ISA 50ft Obsticle')
     
     #5000 + Sea Level 50ft Obsticle(5000+ISA + 18 deg day)
     tw_TO = 1 / ( k_2 / ( ( k_1 * WS / ( BFL * rho) + 0.72 * C_d0_TO ) / C_lmax_TO + mu_g ))
     
-    wp_TO5K50 = hp * tw_wp( WS, nu_p, tw = tw_TO, C_L = C_lmax_TO)
+    wp_TO5K50 = hp * tw_wp( WS, nu_p, tw = tw_TO, C_L = C_lmax_TO, rho = rho_SL)
     plt.plot(weight / WS, weight / wp_TO5K50, label = 'Takeoff Field Length 5000+ISA 50ft Obsticle')
     
     #Landing
@@ -78,7 +79,7 @@ def get_PS_Plot(weight, precision, lbf_lbm, hp, WS, nu_p, AR, w_to, w_L, BFL, rh
         
         tw_C = ( 1 / 0.8 ) * ( 1 / 0.94 ) * N_correction[i] * w_vals[i] / w_to * tw_C_uncorrected
             
-        wp_C = hp * tw_wp( WS, nu_p, tw = tw_C, C_L = C_Lmax_vals[i] )
+        wp_C = hp * tw_wp( WS, nu_p, tw = tw_C, C_L = C_Lmax_vals[i], rho = rho_SL )
         
         temp_vals = np.append(temp_vals, wp_C)
         
@@ -95,7 +96,7 @@ def get_PS_Plot(weight, precision, lbf_lbm, hp, WS, nu_p, AR, w_to, w_L, BFL, rh
     
     tw_celing = (1 / (rho_ceiling / rho_SL) ** 0.6) * (2 * np.sqrt(C_D0_cruise / (np.pi * AR * e)) + G_ceiling)
     
-    wp_celing = hp * tw_wp( WS, nu_p, tw = tw_celing, C_L = C_Lmax )
+    wp_celing = hp * tw_wp( WS, nu_p, tw = tw_celing, C_L = C_Lmax, rho = rho_ceiling )
     
     plt.plot(weight / WS, weight / wp_celing, label = "Ceiling")
     
