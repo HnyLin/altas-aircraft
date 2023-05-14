@@ -532,7 +532,7 @@ def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4):
     #print('Difference is: ', dif)
     #print('Iterations: ;', p)
     
-    return MTOW_new, MPOW, total_fuel_burn
+    return MTOW_new, MPOW, total_fuel_burn, total_battery_weight
 #================================================================================================================
 
 #Test function
@@ -622,11 +622,12 @@ def objective_function(params):
     #print('Iterations: ;', p)
     
     return total_fuel_burn
+
 #Setting Initial Guess
-initial_guess = [12.06, 0.15450, 800, 350, 0.25, 0.25, 0.25, 0.25]
+initial_guess = [13, 0.15, 700, 350, 0.25, 0.25, 0.25, 0.25]
 
 #Setting Bounds
-bound_vals = ((10, 13.14), (0.1, 0.25), (600, 1000), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1))
+bound_vals = ((10, 13.14), (0.1, 0.25), (650, 750), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1))
 
 #Optimize
 start_time = time.time()
@@ -649,9 +650,10 @@ h2 = result.x[5]
 h3 = result.x[6]
 h4 = result.x[7]
 
-MTOW_new, MPOW, total_fuel_burn = tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4)
+MTOW_new, MPOW, total_fuel_burn, total_battery_weight = tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4)
 print("Optimized MTOW (lbf): ", MTOW_new)
 print("Optimized MPOW (hp): ", MPOW)
+print("Optimized Battery Weight (lbf): ", total_battery_weight)
 #================================================================================================================
 
 '''

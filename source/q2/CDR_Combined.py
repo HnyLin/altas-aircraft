@@ -789,10 +789,9 @@ def get_PS_Plot(weight, precision, lbf_lbm, hp, WS, nu_p, AR, w_to, w_L, BFL, rh
     plt.plot( weight / WS, weight / wp_cruise, label = "Cruise" )
     
     #Stall
-    wing_area = 805.1
+    wing_area = 700
     V_takeoff = np.sqrt( 2 * w_to * lbf_lbm / (C_lmax_TO * wing_area * rho_SL) )
     V_stall = 1/ 1.1 * V_takeoff
-    print(V_stall)
     ws_stall = 1 / 2 * rho * V_stall ** 2 * C_Lmax
     
     plt.plot(weight / ws_stall * np.ones(precision), np.linspace(0, 10000, precision), label = "Stall Requirement")
@@ -871,7 +870,7 @@ Cl_max_clean_vals = Cl_max_clean_vals.to_numpy()
 
 #================================================================================================================
 #AR vs CD0 Carpet Plot
-def Get_AR_CD0_Carpet(V_cruise, AR_vals, C_D0_vals, e):
+def Get_AR_CD0_Carpet(V_cruise, AR_vals, C_D0_vals, e, n):
     '''
     AR_vals & C_D0_vals must be same size
     '''
@@ -945,8 +944,9 @@ def reset_parameters(params):
     h2 = params[6]
     h3 = params[7]
     h4 = params[8]
+    MPOW = params[9]
 
-    return MTOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4
+    return MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4
 #================================================================================================================
 
 def Get_tc_Vcruise_Carpet(t_c_vals, V_cruise_vals):
@@ -1060,10 +1060,10 @@ print("Dash 8-q300 Fuel Weight Per Passenger 500 nmi range (lbf): ", round(D8fue
 #For Calulating Optimium Aircraft Parameters (Commented Out Due to Long Run Time)
 
 #Setting Initial Guess
-initial_guess = [12.06, 0.15450, 700, 350, 0.25, 0.25, 0.25, 0.25]
+initial_guess = [13, 0.15, 700, 350, 0.25, 0.25, 0.25, 0.25]
 
 #Setting Bounds
-bound_vals = ((10, 13.14), (0.1, 0.25), (600, 1000), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1))
+bound_vals = ((10, 13.14), (0.1, 0.25), (650, 750), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1))
 
 #Optimize
 start_time = time.time()
@@ -1076,20 +1076,36 @@ print(result.x)
 print("Optimum Fuel Weight (lbf): ", result.fun)
 print("Optimum Fuel Weight Per Passenger (lbf): ", result.fun/50)
 
+#Variable Extraction / Recalculate MTOW For Minimized Fuel Burn
+AR = result.x[0]
+t_c_root = result.x[1]
+Wing_area = result.x[2]
+V_cruise = result.x[3]
+h1 = result.x[4]
+h2 = result.x[5]
+h3 = result.x[6]
+h4 = result.x[7]
+
+MTOW_new, MPOW, total_fuel_burn = tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4)
+print("Optimized MTOW (lbf): ", MTOW_new)
+print("Optimized MPOW (hp): ", MPOW)
+print("Optimized Battery Weight (lbf): ", total_battery_weight)
+
 
 #Optimization Results
-optimized_fuel_weight = 3465                #lbf
-MTOW = 40265                                #lbf
-AR = 12.19
+optimized_fuel_weight = 3468                #lbf
+MTOW = 39774                                #lbf
+MPOW = 3535
+AR = 13.02
 t_c_root = 0.25
-S_ref = 800                                 #ft^2
+S_ref = 700                                 #ft^2
 V_cruise = 350                              #ktas
-h1 = 0.24                                   #Start Warmup Taxi
+h1 = 0.23                                   #Start Warmup Taxi
 h2 = 0.16                                   #Takeoff
-h3 = 0.37                                   #Descent
-h4 = 0.37                                   #Landing
+h3 = 0.36                                   #Descent
+h4 = 0.35                                   #Landing
 
-params = [MTOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4]
+params = [MTOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4, MPOW]
 
 optimized_fuel_weight_per_pass = optimized_fuel_weight / 50
 print("Optimized Fuel Weight Per Passenger 500 nmi Range (lbf): ", round(optimized_fuel_weight_per_pass, 2))
@@ -1100,9 +1116,6 @@ print("Percent Difference in Fuel Burn: ", round(percent_difference, 1))
 #================================================================================================================
 
 #Refined Drag Polars
-print("========================================================================")
-print("Refined Drag Polars")
-print("========================================================================")
 Cl_max = 3.3
 rho_takeoff_landing = 0.0659                #lbm/ft^3
 
@@ -1236,7 +1249,7 @@ V_cruise = 350
 n = 7
 AR_vals = np.linspace(5, 20, n)
 C_D0_vals = np.linspace(0.005, 0.005*n, n)
-Get_AR_CD0_Carpet(V_cruise, AR_vals, C_D0_vals, e)
+Get_AR_CD0_Carpet(V_cruise, AR_vals, C_D0_vals, e, n)
 
 #tc vs V_cruise Carpet Plot (Trade Study)
 n = 4
@@ -1247,7 +1260,7 @@ Get_tc_Vcruise_Carpet(t_c_vals, V_cruise_vals)
 '''
 #================================================================================================================
 
-MTOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)
+MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)
 
 #Updated P-S Plot
 #Inputs
