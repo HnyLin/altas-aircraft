@@ -527,7 +527,7 @@ def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4):
     #print('Difference is: ', dif)
     #print('Iterations: ;', p)
     
-    return MTOW_new, MPOW, total_fuel_burn
+    return MTOW_new, MPOW, total_fuel_burn, total_battery_weight
 #================================================================================================================
 
 #Test function
@@ -835,7 +835,7 @@ def get_PS_Plot(weight, precision, lbf_lbm, hp, WS, nu_p, AR, w_to, w_L, BFL, rh
     
     plt.fill_between( weight/WS,  weight / wp_balkedOEI, y2 = 40000, where = (weight / WS >= weight / ws_L), interpolate=True, color = "green", alpha = 0.2)
     
-    plt.scatter(700, 5050, marker = "*", color = "red", s = 500)
+    plt.scatter(700, 4880, marker = "*", color = "red", s = 500)
     
     plt.show()
     
@@ -972,7 +972,7 @@ def Get_tc_Vcruise_Carpet(t_c_vals, V_cruise_vals):
         #index = 0
         for V in V_cruise_vals:
             #tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4) # has 3 outputs                
-            x, z, y = tradeStudies(AR, tc, Wing_area, V, h1, h2, h3, h4)      #using optemized values from 5/13 optimization run
+            x, z, y, _ = tradeStudies(AR, tc, Wing_area, V, h1, h2, h3, h4)      #using optemized values from 5/13 optimization run
         
             TakeoffWeight = np.append(TakeoffWeight, x)
             FuelBurn  = np.append(FuelBurn, y)
@@ -1055,7 +1055,7 @@ D8fuel_burn_per_pass = D8total_fuel_burn / 50
 print("Dash 8-q300 Fuel Weight Per Passenger 500 nmi range (lbf): ", round(D8fuel_burn_per_pass, 2))
 
 #================================================================================================================
-
+'''
 
 #For Calulating Optimium Aircraft Parameters (Commented Out Due to Long Run Time)
 
@@ -1086,11 +1086,12 @@ h2 = result.x[5]
 h3 = result.x[6]
 h4 = result.x[7]
 
-MTOW_new, MPOW, total_fuel_burn = tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4)
+MTOW_new, MPOW, total_fuel_burn, total_battery_weight = tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4)
 print("Optimized MTOW (lbf): ", MTOW_new)
 print("Optimized MPOW (hp): ", MPOW)
 print("Optimized Battery Weight (lbf): ", total_battery_weight)
 
+'''
 
 #Optimization Results
 optimized_fuel_weight = 3468                #lbf
