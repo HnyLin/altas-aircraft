@@ -443,6 +443,8 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
 
     total_hybrid_weight = total_fuel_burn + Battery_Weights[-1] * 1.2
 
+    total_battery_weight = Battery_Weights[-1] * 1.2
+
     return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight
 #================================================================================================================
 
@@ -1128,7 +1130,8 @@ print("Optimized Hybrid Electric 500nmi Trip Fuel Burn (lbf): ", round(optimized
 W_TO = MTOW
 P_rshp = MPOW
 S_w = S_ref
-calcEmptyWeight(W_TO, P_rshp, AR, t_c_root, S_w, display = True)
+W_empty = calcEmptyWeight(W_TO, P_rshp, AR, t_c_root, S_w, display = True)
+print("Aircraft Empty Weight (lbs): ", W_empty)
 
 #================================================================================================================
 MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)        #Resets Aircraft Parameters (Safety)
@@ -1153,17 +1156,17 @@ Mach_cruise = getMach(28000, V_cruise)
 #Component Data
 #[Wing Section 1, Wing Section 2, V Tail, H Tail, Winglet, Nacelle, Fueselage]
 
-char_length_vals = np.array([11.904, 7.0956, 18.32, 5.584, 2.3196, 14.167, 81])
+char_length_vals = np.array([9.76, 5.82, 14.09, 5.67, 1.96, 14.167, 81])
 
 percent_lam_flow_vals = np.array( [0.5, 0.5, 0.5, 0.5, 0.5, 0.25, 0.25] )
 
-wetted_area_vals = np.array( [883.718, 839.026, 458.405, 389.813, 46.496, 52.454, 2093] )      
+wetted_area_vals = np.array( [753.8, 701.75, 334.4, 381.6, 37.504, 52.454, 2093] )      
 
 interference_factor_vals = np.array( [1, 1, 1, 1, 1, 1.5, 1] )               
 
-form_factor_vals_takeoff_landing = np.array( [1.33018616, 1.325467794, 1.261023316, 1.289911252, 1.259013234, 1.058329216, 1.133150585] )
+form_factor_vals_takeoff_landing = np.array( [1.84, 1.83, 1.15, 1.17, 1.71, 1.06, 1.13] )
 
-form_factor_vals_cruise = np.array( [1.425822647, 1.419737634, 1.33662719, 1.373882348, 1.3340349, 1.058329216, 1.133150585] )
+form_factor_vals_cruise = np.array( [2.08, 2.07, 1.2, 1.22, 1.92, 1.058329216, 1.133150585] )
 
 drag_area_vals_geardown = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2), 0.15, 0.15, 0.25]) * 91
 
