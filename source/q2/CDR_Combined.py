@@ -448,7 +448,7 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight
 #================================================================================================================
 
-def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4):
+def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, display = False):
     '''
     Trade Studies Loop. Slight modification of B1_MTOW_Refined.py
     Takes input variables (for )
@@ -525,6 +525,9 @@ def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4):
     #print('New Power Req is:', MPOW)
     #print('Difference is: ', dif)
     #print('Iterations: ;', p)
+
+    if display == True:
+        print("Fuel Burn Before Cruise (lbf): ", SWT_fuel_burn + Takeoff_fuel_burn + climb_fuel_burn)
     
     return MTOW_new, MPOW, total_fuel_burn, total_battery_weight
 #================================================================================================================
@@ -1107,7 +1110,7 @@ h4 = 0.35                                   #Landing
 
 params = [MTOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4, MPOW]
 
-MTOW_new, MPOW, total_fuel_burn, total_battery_weight = tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4)
+MTOW_new, MPOW, total_fuel_burn, total_battery_weight = tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, display = True)
 print("Optimized MTOW (lbf): ", MTOW_new)
 print("Optimized MPOW (hp): ", MPOW)
 print("Optimized Battery Weight (lbf): ", total_battery_weight)
