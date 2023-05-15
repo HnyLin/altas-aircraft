@@ -5,6 +5,9 @@ import time
 import pandas as pd
 import plotly.graph_objects as go
 from labellines import labelLines
+import math
+from math import log10, floor
+
 
 #Functions
 
@@ -1021,6 +1024,279 @@ def Get_tc_Vcruise_Carpet(t_c_vals, V_cruise_vals):
     fig.show()
 
 #================================================================================================================
+#Cost Estimation V2
+
+def round_sig(x, sig=3):
+    '''Simple Significant figure calculator, rounds to 3 significant figures'''
+    return round(x, sig-int(floor(log10(abs(x))))-1)
+
+def get_Cost_Estimate(MTOW, MPOW, V_cruise, total_battery_weight, display = False):
+    #==========================================================================================================
+    #RTD&E Costs: Engineering, Tooling,  Manufacturing, Development, Flight Testing, Quality Control, Materials
+    #==========================================================================================================
+    #Variables
+    y = 2022        #Year of for analysis
+    Q = 50          #Number of aircraft produced in 5-year period 
+    Q_M = 50/60     #"                 " produced in one month (assume consisent buillding over 5 year aircraft)
+    V_H = V_cruise       #Max level airspeed, KTAS (FOR NOW put cruise speed)
+    Q_Proto = 2     #Number of prototypes (assume 2)
+    CPI = 1.24037   #CPI  from 2012 to 2022 (using CPI caluclator for $1000 Jan'12 to $1000 Jan'22 [https://www.bls.gov/data/inflation_calculator.htm])
+                    #Using this because Finger et al. equations  use CPI from 2012 to present day
+
+    W_TO = MTOW              #**************************************
+    W_airframe = 19830-1369  #**************************************
+
+    #W_TO = 75000    #testing
+    #W_airframe = 32500
+
+
+    f = 0.4     #Experimenting with Composites Factor, see lines below for explanation
+
+    #CoE (Cost of ... Engineering)
+    F_CF = 1.03
+    F_Comp = f*2.00
+    F_Press = 1.03
+    F_HyE = 1.66
+    R_Eng = 2.576*y - 5058      #[Nikolai Fig 24.4]
+    C_Eng = 0.083*W_airframe**0.791*V_H**1.521*Q**0.183*F_CF*F_Comp*F_Press*F_HyE*R_Eng*CPI
+
+    #CoT
+    F_Taper = 1                 #we have a tapered aircraft
+    F_CF = 1.02
+    F_Comp = f*2.00           #Assumes 40% composites in the aircraft (multplying the 100% composites factor by 40%)
+    F_Press = 1.01
+    F_HyE = 1.10
+    R_Tool = 2.883*y - 5666     #[Nikolai Fig 24.4]
+    C_Tool = 2.1036*W_airframe**0.764*V_H**0.899*Q**0.178*Q_M**0.066*F_Taper*F_CF*F_Comp*F_Press*F_HyE*R_Tool*CPI
+
+    #CoMFG
+    F_CF = 1.01
+    F_Comp = f*1.25           #Assumes 40% composites in the aircraft
+    F_HyE = 1.10
+    R_MFG =2.316*y - 4552       #[Nikolai Fig 24.4]
+    C_MFG = 20.2588*W_airframe**0.74*V_H**0.543*Q**0.524*F_CF*F_Comp*F_HyE*R_MFG*CPI
+
+    #CoD
+    F_CF = 1.01
+    F_Comp = f*1.50           #Assumes 40% composites in the aircraft
+    F_Press = 1.03
+    F_HyE = 1.05
+    C_Dev = 0.06458*W_airframe**0.873*V_H**1.89*Q_Proto**0.346*F_CF*F_Comp*F_Press*F_HyE*CPI
+
+    #CoFT
+    F_HyE = 1.50
+    C_FT = 0.009646*W_airframe**1.16*V_H**1.3718*Q_Proto**1.281*F_HyE*CPI
+
+    #CoQC
+    F_Comp = f*1.50           #Assumes 40% composites in the aircraft
+    F_HyE = 1.50
+    C_QC = 0.13*C_MFG*F_Comp*F_HyE
+
+    #CoM
+    F_CF = 1.02
+    F_Press = 1.01
+    F_Hye = 1.05
+    C_Mat = 24.896*W_airframe**0.689*V_H**0.624*Q**0.792*F_CF*F_Press*F_HyE*CPI
+    #=========================================================================================
+    #Propulsion Costs: Int. Comb. Engine, Elect. Motor, Power Mngmt. Sys., Battery, Propellers
+    #=========================================================================================
+    #Variables
+    N_engine = 2        #Number of Engine
+    N_Motor = 2
+    N_Prop = 2
+    D_P = 11            #11ft Diameter (from OpenVSP model)
+
+
+
+    W_bat = total_battery_weight * 32.174        #************************************** Should be from A4 Dimensional Values, just estimating now
+    E_Bat = 0.5*W_bat/2.2   #We assume a battery specific energy of 0.5kWhr/kg, and our battery weight is in lbm
+
+    #Calculating Power of motors/comb engine from 
+    H_P = 0.1
+    P_SHP = MPOW        #**************************************Total Power needed (takeoff) (P_EM + P_ICE)
+    #P_SHP = 4760            #testing
+    P_EM = 0.25*P_SHP
+    P_ICE = (1 - H_P)*P_SHP
+
+    P_EM_tot = N_Motor*P_EM
+
+    #CoICE (Cost of ...Int. Comb. Engine)
+    C_ICE = 174*N_engine*P_ICE*CPI
+
+    #CoEM
+    C_EM = 174*N_Motor*P_EM*CPI
+
+    #CoPMS
+    C_PMS = 150*P_EM_tot*CPI
+
+    #CoB
+    C_Bat = 200*E_Bat*CPI
+
+    #CoP
+    C_CSProp = 210*N_Prop*D_P**2*(P_SHP/D_P)**0.12*CPI
+    #================================
+    #Sum Everything Up
+    #===============================
+    #Unit Cost?
+    C_TOT = C_CSProp + C_Bat + C_PMS + C_EM + C_ICE + C_Mat + C_QC + C_FT + C_Dev + C_MFG + C_Tool + C_Eng
+    C_unit_price = C_TOT/Q
+    #Sales Price
+    Profit = C_unit_price*1.15 - C_unit_price #15% Profit Margin
+    C_unit_sales_price = C_unit_price*1.15 
+
+    if display == True:
+        print("==================================================================")
+        print("Refined Cost Estimation")
+        print("==================================================================")
+
+        print("Cost of Engineering: %0.3f"% C_Eng)
+        print("Cost of Tooling: %0.3f"% C_Tool)
+        print("Cost of Manufacturing: %0.3f"% C_MFG)
+        print("Cost of Development: %0.3f"% C_Dev)
+        print("Cost of Flight Testing: %0.3f"% C_FT)
+        print("Cost of Quality Control: %0.3f"% C_QC)
+        print("Cost of Materials: %0.3f"% C_Mat)
+        print("Cost of Combustion Engine: %0.3f"% C_ICE)
+        print("Cost of Electric Motors: %0.3f"% C_EM)
+        print("Cost of Power Management System: %0.3f"% C_PMS)
+        print("Cost of Batteries: %0.3f"% C_Bat)
+        print("Cost of Propeller: %0.3f"% C_CSProp)
+        print("===================================")
+        print("Total Program Cost (USD): %0.3f"% C_TOT)
+        print("Unit Price (USD): %0.3f"% C_unit_price)
+        print("===================================")
+        print("Unit Price (USD): %0.3f"% Profit)
+        print("Unit Sales Price (USD): %0.3f"% C_unit_sales_price)
+        print('\n')
+        print("===================================")
+        print('PRICE ROUNDED TO 3 SIGNIFICANT FIGURES')
+        print("===================================")
+        print('\n')
+
+        #Sig Figs: 3 (based off of factors used and  max level flight 275 from RFP and )
+
+        print("Cost of Engineering: %0.3f"% round_sig(C_Eng))
+        print("Cost of Tooling: %0.3f"% round_sig(C_Tool))
+        print("Cost of Manufacturing: %0.3f"% round_sig(C_MFG))
+        print("Cost of Development: %0.3f"% round_sig(C_Dev))
+        print("Cost of Flight Testing: %0.3f"% round_sig(C_FT))
+        print("Cost of Quality Control: %0.3f"% round_sig(C_QC))
+        print("Cost of Materials: %0.3f"% round_sig(C_Mat))
+        print("Cost of Combustion Engine: %0.3f"% round_sig(C_ICE))
+        print("Cost of Electric Motors: %0.3f"% round_sig(C_EM))
+        print("Cost of Power Management System: %0.3f"% round_sig(C_PMS))
+        print("Cost of Batteries: %0.3f"% round_sig(C_Bat))
+        print("Cost of Propeller: %0.3f"% round_sig(C_CSProp))
+        print("===================================")
+        print("Total Program Cost (USD): %0.3f"% round_sig(C_TOT))
+        print("Unit Price (USD): %0.3f"% round_sig(C_unit_price))
+        print("===================================")
+        print("Profit Margin (USD): %0.3f"% round_sig(Profit))
+        print("Unit Sales Price (USD): %0.3f"% round_sig(C_unit_sales_price))
+
+        print(R_Eng, R_MFG,R_Tool)
+
+
+    #======================================================
+    #Tre's Code
+    MTOW = MTOW #take off weight 
+    SHP_TO = MPOW
+    CEF =  3.83 #Cost Estimation Fcator 
+    Tau_b = 1.42 + 22/60 # Block time 
+    R_attd = 67110/2080 #hourly wage 
+    n = 2
+    n_attd =  1 # number of Attendance 
+    W_f = 500*30 # Weight of fuel
+    Pf = 3.14 # USD per gallon 
+    rho_f = 50 # Fuel density
+    W_oil = 0.0125*W_f*(Tau_b/100) # weight oil 
+    P_oil = 88.58 # Price of oil per gal
+    rho_oil = 62.6 # oil desity
+    W_b = 3838 #weight of battery 
+    P_elec = 0.20 #electricity price 
+    e_elec_star = 160 # Spec. Energy of Battery W*h/kg
+    R = 500 #mission range 
+    IR_a = 0.02 #insurance rate about 2%
+    C_unit = CEF * (10**(1.1846+(1.2625*log10(MTOW)))) #Cost per unit 
+    K_depreciation = 0.1 # aircraft residual value factor
+
+    ## Aiframe maintenance costs
+    RL = 31.52 # Maintenance labor cost USD/hr
+    WA = 19830-1369 # Airframe weight (empty weight - engine weight)
+    C_frame_ml = 1.03*(3+(0.067*WA)/1000)*RL # Airframe labor costs
+    C_engines = CEF * (10**(2.5262+(0.9465*log10(SHP_TO)))) # Cost of engines
+    C_airframe = C_unit-C_engines # Cost of airframe
+    C_frame_mm = 1.03*(30*CEF) + 0.79*(10**(-5))*C_airframe # Cost of airframe materials
+    C_airframe_maintenance = (C_frame_ml+C_frame_mm)*Tau_b
+
+    # Engine maintenance costs
+    To = (SHP_TO/591)*550 # Takeoff thrust
+    Hem = 5000 # Hr between engine overhaul
+    C_engine_ml = 1.03*1.3*(0.4956+0.0532*((SHP_TO/n)/1000)*(1100/Hem)+0.1)*RL # Engine labor maintenance
+    C_engine_mm = (25+(18*To)/(10**4))*(0.62+0.38/Tau_b)*CEF # Engine material costs
+    C_engine_maintenance = n*(C_engine_ml+C_engine_mm)*Tau_b
+
+    #(CEF) = cost escalation factor
+    C_aircraft = C_unit
+    IR_a = 0.02 # Hull insurance rate
+
+    #Crew domestic flights 
+    C_crew = (440 + 0.532*(MTOW/1000))* (CEF) * (Tau_b)
+
+    #Attendants (domestic flights)
+    C_attd = R_attd * n_attd *(CEF) * Tau_b # attendants
+
+    C_fuel = 1.02 * W_f * (Pf / rho_f) #fuel
+
+    C_oil = 1.02 * W_oil * (P_oil / rho_oil) #oil
+
+    C_elec = 1.05 * W_b * P_elec * e_elec_star
+    
+    #Fees 
+    C_airport = 1.5 * (MTOW/1000) * (CEF) #Airport Fee
+
+    C_navigation = 0.5 * (CEF) * ((1.852 * R)/ Tau_b) * math.sqrt((0.00045359237 * MTOW)/50) # Navigation fee 
+
+    U_annual  = 1500 * ((3.4546 * Tau_b)+ 2.994 - ((12.289 * Tau_b**2)- (5.6626 *Tau_b)+ 8.964)**0.5) # Annual insurance cost 
+
+    C_insurance = ((IR_a * C_aircraft)/ U_annual) * Tau_b  # Annual Insurance cost 
+
+    C_depreciation = (C_unit * (1 - K_depreciation * Tau_b)/ (n * U_annual) ) #Depreciation
+
+    # Direct Operating Cost
+    DOC = C_crew + C_attd + C_fuel + C_elec + C_oil + C_airport + C_navigation \
+        + C_engine_maintenance + C_airframe_maintenance + C_insurance + C_depreciation
+
+    # Add financing
+    DOC = DOC+DOC*0.07
+
+    # Financing 
+    C_registration = (0.001 + (10**-8 * MTOW)) * DOC
+
+    # Finalize DOC
+    DOC = DOC + C_registration
+
+
+    #Total Direct cost of Operation
+    C_maint = C_engine_maintenance+C_airframe_maintenance
+
+    COC = DOC - C_insurance - C_depreciation - DOC*0.07
+
+    COO = DOC - COC
+
+    if display == True:
+        print("Fly Away Cost:% 0.3f"% C_unit)
+
+        print("Direct Operating Cost:% 0.3f"% DOC)
+
+        print("Cash Operating Cost:% 0.3f"% COC)
+
+        print("Cost Of Ownership: %0.3f"% COO)
+
+        print("==================================================================")
+
+    return
+
 
 #================================================================================================================
 
@@ -1251,10 +1527,10 @@ CD_landing_geardown = CD_i_landing_vals + CD_0_takeoff_landing_geardown + delta_
 #Plotting
 #Takeoff Gear Up
 plt.figure(figsize=(12, 12))
-plt.plot(CD_takeoff_gearup, CL_takeoff_gearup, label = "Takeoff Flaps, Gear Up", marker = ".", markersize = 15)
-plt.plot(CD_takeoff_geardown, CL_takeoff_geardown, label = "Takeoff Flaps, Gear Down", marker = ".", markersize = 15)
-plt.plot(CD_landing_gearup, CL_landing_gearup, label = "Landing Flaps, Gear Up", marker = ".", markersize = 5)
-plt.plot(CD_landing_geardown, CL_landing_geardown, label = "Landing Flaps, Gear Down", marker = ".", markersize = 5)
+plt.plot(CD_takeoff_gearup, CL_takeoff_gearup, label = "Takeoff Flaps, Gear Up", marker = ".", markersize = 10)
+plt.plot(CD_takeoff_geardown, CL_takeoff_geardown, label = "Takeoff Flaps, Gear Down", marker = ".", markersize = 10)
+plt.plot(CD_landing_gearup, CL_landing_gearup, label = "Landing Flaps, Gear Up", marker = ".", markersize = 10)
+plt.plot(CD_landing_geardown, CL_landing_geardown, label = "Landing Flaps, Gear Down", marker = ".", markersize = 10)
 plt.plot(CD_clean, CL_clean, label = "Clean", marker = ".", markersize = 10)
 plt.ylabel("$C_L$")
 plt.xlabel("$C_D$")
@@ -1355,4 +1631,14 @@ wp_TOSL30, wp_TOSL50, wp_TO5K50, wp_cruise, wp_takeoffclimb, wp_transegmentclimb
                   rho_ceiling, C_Lmax, G_climbvals, k_svals, C_D0vals, 
                   C_Lmax_vals, labels, e_vals, w_vals, N_correction)
 #================================================================================================================
+#Refined Weight Estimate
+
 MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)        #Resets Aircraft Parameters (Safety)
+
+get_Cost_Estimate(MTOW, MPOW, V_cruise, total_battery_weight, display = True)
+
+#================================================================================================================
+
+#================================================================================================================
+
+#================================================================================================================
