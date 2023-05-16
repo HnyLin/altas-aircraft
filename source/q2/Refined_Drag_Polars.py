@@ -145,7 +145,6 @@ Cl_max_clean_vals = Cl_max_clean_vals.to_numpy()
 
 
 
-
 #Aircraft Geometry
 
 #Gneral Parameters

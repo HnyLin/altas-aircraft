@@ -110,7 +110,7 @@ def get_PS_Plot(weight, precision, lbf_lbm, hp, WS, nu_p, AR, w_to, w_L, BFL, rh
     
     plt.fill_between( weight/WS,  weight / wp_balkedOEI, y2 = 40000, where = (weight / WS >= weight / ws_L), interpolate=True, color = "green", alpha = 0.2)
     
-    plt.scatter(weight / ws_L, 20000, marker = "*", color = "red", s = 1000)
+    plt.scatter(800, 14750, marker = "*", color = "red", s = 1000)
     
     plt.show()
     

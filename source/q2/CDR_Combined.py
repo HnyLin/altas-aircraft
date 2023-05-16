@@ -1599,10 +1599,6 @@ h_cruise = 28000                    #ft
 Mach_takeoff_landing = getMach(5000, V_takeoff_landing)
 Mach_cruise = getMach(28000, V_cruise)
 
-'''
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Revise Component Data !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-'''
-
 #Component Data
 #[Wing Section 1, Wing Section 2, V Tail, H Tail, Winglet, Nacelle, Fueselage]
 
@@ -1711,8 +1707,8 @@ plt.show()
 
 #================================================================================================================
 
-'''
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Plotting Held for Speed !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Plotting Held for Speed !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #AR vs. CD0 Carpet Plot (Trade Study)
 h_cruise = 28000
 e = 0.8
@@ -1728,7 +1724,7 @@ t_c_vals = np.linspace(0.05, 0.35, 4)
 V_cruise_vals = np.linspace(250, 400, 4)
 Get_tc_Vcruise_Carpet(t_c_vals, V_cruise_vals)
 
-'''
+
 #================================================================================================================
 
 MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)
@@ -1825,8 +1821,7 @@ v_n(W,nmax,nmin,rho,CL,S,cbar,CLalf,'Loads (MTOW)','V-n Diagram (MTOW)')
 
 W_crew_and_payload = 12660 
 
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHECK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-minimum_weight = MTOW - W_crew_and_payload - total_battery_weight - optimized_fuel_weight
+minimum_weight = MTOW - W_crew_and_payload - optimized_fuel_weight
 
 W = minimum_weight
 v_n(W,nmax,nmin,rho,CL,S,cbar,CLalf,'Loads (Minimum Weight)','V-n Diagram (Minimum Weight)')
@@ -1842,8 +1837,8 @@ C_Do = 0.0258
 C_L = 1.96
 N_p = 0.9
 c = 7.78760
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHECK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Fuel_Max = optimized_fuel_weight + 6000 
+
+Fuel_Max = optimized_fuel_weight + 7000 
 
 Fuel_Min = optimized_fuel_weight
 Payload_Max = W_crew_and_payload
