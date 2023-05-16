@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from labellines import labelLines
 import math
 from math import log10, floor
-
+from sympy import symbols, Eq, solve
 
 #Functions
 
@@ -1297,6 +1297,177 @@ def get_Cost_Estimate(MTOW, MPOW, V_cruise, total_battery_weight, display = Fals
 
     return
 
+#================================================================================================================
+#V-n Diagram 
+def v_n(W,nmax,nmin,rho,CL,S,cbar,CLalf,title1,title2): # Adjust input variables as necessary
+
+    # EAS Velocities
+    W_S = W/S
+    Vs = ((2*W)/(rho*S*CL))**0.5
+    mu = (2*W_S)/(rho*cbar*CLalf*32.2)
+    kg = (0.88*mu)/(5.3+mu)
+    ude_c = 56
+    ude_d = ude_c*0.5
+    ude_b = ude_c
+    x, y, z = symbols('x y z')
+    eq1 = Eq(y + 1.32*ude_c - x, 0)
+    eq2 = Eq((x/1.688) - z, 0)
+    eq3 = Eq((Vs*(1+(kg*ude_c*z*CLalf)/(498*W_S))) - y, 0)
+    solution = solve((eq1,eq2,eq3), (x, y, z))
+    Vc = float(solution[x])
+    Vb = float(solution[y])
+    Vc_eas_kn = float(solution[z])
+    Vd = 1.25*Vc
+    Vb_eas_kn = Vb/1.688
+    Vd_eas_kn = Vd/1.688
+
+    # Flight loads
+    V = np.linspace(0,Vd,10000)
+    n_Stall = (0.5*rho*CL*(V**2))/W_S
+    n_pos = np.ones(10000)*nmax
+    n_neg = -nmin*np.ones(10000)
+    upper_idx = np.argwhere(np.diff(np.sign(n_Stall - n_pos))).flatten()
+    lower_idx = np.argwhere(np.diff(np.sign((-1*n_Stall) - n_neg))).flatten()
+
+    # Gust Loads
+    V_rough_array = np.linspace(0,Vb,10000)
+    V_rough_array_kn = np.linspace(0,Vc_eas_kn,10000)
+    V_cruise_array = np.linspace(0,Vc,10000)
+    V_cruise_array_kn = np.linspace(0,Vc_eas_kn,10000)
+    V_dive_array = V
+    V_dive_array_kn = np.linspace(0,Vd_eas_kn,10000)
+    n_rough_pos = 1+(kg*CLalf*ude_b*V_rough_array_kn)/(498*W_S)
+    n_rough_neg = 1+(-1*kg*CLalf*ude_b*V_rough_array_kn)/(498*W_S)
+    n_cruise_pos = 1+(kg*CLalf*ude_c*V_cruise_array_kn)/(498*W_S)
+    n_cruise_neg = 1+(-1*kg*CLalf*ude_c*V_cruise_array_kn)/(498*W_S)
+    n_dive_pos = 1+(kg*CLalf*ude_d*V_dive_array_kn)/(498*W_S)
+    n_dive_neg = 1+(-1*kg*CLalf*ude_d*V_dive_array_kn)/(498*W_S)
+
+    # Plot loads
+    plt.figure(figsize=(8,4))
+    plt.title(title1)
+    plt.xlabel("V (ft/s)")
+    plt.ylabel("n (-)")
+    plt.plot(V[:upper_idx[0]],n_Stall[:upper_idx[0]], label='Stall', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(V[:lower_idx[0]],-n_Stall[:lower_idx[0]], label='Stall', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(V[upper_idx[0]:],n_pos[upper_idx[0]:], label='Limit Load Pos', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(V[lower_idx[0]:],n_neg[lower_idx[0]:], label='Limit Load Neg', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(Vd*np.ones(100),np.linspace(-nmin,nmax,100), label='Excess Speed', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(V_rough_array,n_rough_pos, label='Gust Rough', linestyle='dashdot', linewidth=2, marker=None, markersize=8)
+    plt.plot(V_rough_array,n_rough_neg, label='Gust Rough', linestyle='dashdot', linewidth=2, marker=None, markersize=8)
+    plt.plot(V_cruise_array,n_cruise_pos, label='Gust Cruise', linestyle='--', linewidth=2, marker=None, markersize=8)
+    plt.plot(V_cruise_array,n_cruise_neg, label='Gust Cruise', linestyle='--', linewidth=2, marker=None, markersize=8)
+    plt.plot(V_dive_array,n_dive_pos, label='Gust Dive', linestyle='--', linewidth=2, marker=None, markersize=8)
+    plt.plot(V_dive_array,n_dive_neg, label='Gust Dive', linestyle='--', linewidth=2, marker=None, markersize=8)
+    plt.grid(True)
+    plt.legend(bbox_to_anchor=(1.05,1))
+    plt.tight_layout()
+    plt.show()
+
+    # Plot combined V-n Diagram
+    plt.figure(figsize=(8,4))
+    plt.title(title2)
+    plt.xlabel("V (ft/s)")
+    plt.ylabel("n (-)")
+    plt.plot(V[:upper_idx[0]],n_Stall[:upper_idx[0]], color='black', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(V[:lower_idx[0]],-n_Stall[:lower_idx[0]], color='black', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(np.linspace(V[upper_idx[0]],V_rough_array[-1],100),np.maximum(np.linspace(n_Stall[upper_idx[0]],n_rough_pos[-1],100),nmax),\
+            color='black', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(np.linspace(V[lower_idx[0]],V_rough_array[-1],100),np.minimum(np.linspace(-n_Stall[lower_idx[0]],n_rough_neg[-1],100),-nmin),\
+            color='black', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(np.linspace(V_rough_array[-1],V_cruise_array[-1],100),np.maximum(np.linspace(n_rough_pos[-1],n_cruise_pos[-1],100),nmax),\
+             color='black', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(np.linspace(V_rough_array[-1],V_cruise_array[-1],100),np.minimum(np.linspace(n_rough_neg[-1],n_cruise_neg[-1],100),-nmin),\
+            color='black', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(np.linspace(V_cruise_array[-1],V[-1],100),np.maximum(np.linspace(n_cruise_pos[-1],nmax,100),nmax),\
+             color='black', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(np.linspace(V_cruise_array[-1],V[-1],100),np.minimum(np.linspace(n_cruise_neg[-1],-nmin,100),-nmin),\
+             color='black', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.plot(Vd*np.ones(100),np.linspace(-nmin,nmax,100), color='black', linestyle='-', linewidth=2, marker=None, markersize=8)
+    plt.grid(True)
+    plt.show()
+#================================================================================================================
+#Range 
+
+def get_Payload_Range(V, AR, e, rho, S, b, C_Do, C_L, N_p, c, Fuel_Max, Fuel_Min, Payload_Max, OEW, MTOW):
+    # Conversion Factor 
+    slug = 32.17 # [lbm] in a slug
+    nmi = 6076.12 # [ft] in a nmi 
+
+    # Fully Fuel Estimation 
+
+    # Calculations 
+
+    # For Conventional estimation, airspeed, altitude, c, and prop efficiency 
+    # are assumed constant. Lift = Weight 
+
+    Res_Fuel_Min = (Fuel_Min / 1.06) * .06 # Calcs reserve fuel [lbf]
+    Res_Fuel_Max = (Fuel_Max / 1.06) * .06 # Calcs reserve fuel [lbf]
+
+    # Variable to be used in the Range Equation 
+    
+    a1a2 = np.sqrt(C_Do / (np.pi * AR * e))
+
+    a2_by_a1 = (1 / (.5 * rho * (V ** 2) * S * C_L))
+
+    #Starting Weights Point B 
+    Wo_B = MTOW # Max takeoff Weight [lbf]
+    W1_B = OEW + Payload_Max + Res_Fuel_Min# OEW (operating empty weight) + Max payload + Reserve Fuel [lbf]
+
+    #Starting Weights Point C
+    Wo_C = MTOW # Max takeoff Weight [lbf]
+    W1_C = MTOW - Fuel_Max + Res_Fuel_Min # Max takeoff Weight - Max Fuel + Reserve Fuel at Payload =(MTOW - Max Fuel - OEW)[lbf]
+
+    #Starting Weigths Point D 
+    Wo_D = Fuel_Max + OEW  # Max Fuel + OEW  [lbf]
+    W1_D = OEW + Res_Fuel_Min # OEW + Reserve Fuel [lbf]
+
+    # Payloads 
+
+    P_loadA = Payload_Max # Max Payload (total) [lbf] at point A 
+    P_loadB = P_loadA # Payload [lbf] at point B not at max fuel
+    P_loadC = MTOW - Fuel_Max - OEW  # Reduced Payload [lbf] for max fuel at point C 
+    P_loadD = 0 # No Payload [lbf] at point D for max range
+
+
+    def RangeCalc(Wo,W1):
+        
+        R = (N_p / c) * (1 / a1a2) * (np.arctan(Wo * (a2_by_a1)) - np.arctan(W1 * (a2_by_a1)))
+        
+        R = R * nmi # conversiion from [ft] to [nmi]
+        
+        return R
+
+    R_A = 0 # Starting Point 
+
+    R_B = RangeCalc(Wo_B, W1_B) # Range at point B 
+
+    R_C = RangeCalc(Wo_C, W1_C) # Range at point C 
+
+    R_D = RangeCalc(Wo_D, W1_D) # Range at point D
+
+    # Plotting Range 
+
+    plt.figure(figsize = (8,8))
+    plt.title("Payload vs Range Estimation", size = 20)
+    Point1 = [R_A ,P_loadA]
+    Point2 = [R_B ,P_loadB]
+    Point3 = [R_C ,P_loadC]
+    Point4 = [R_D ,P_loadD]
+    x_values = [Point1[0], Point2[0],Point3[0],Point4[0]]
+    y_values = [Point1[1], Point2[1],Point3[1], Point4[1]]
+    plt.plot(x_values, y_values, 'black', linestyle="-")
+
+    plt.plot(R_A, P_loadA, marker="o",  color = "green", label = "Point A")
+    plt.plot(R_B, P_loadB,  marker="o",  color = "blue" , label = "Point B")
+    plt.plot(R_C, P_loadC,  marker="o", color = "orange", label = "Point C")
+    plt.plot(R_D, P_loadD,  marker="o", color = "red", label = "Point D")
+    plt.ylabel("Payload [lbf] ",  size =15)
+    plt.xlabel("Range [nmi]", size= 15)
+    plt.legend()
+    plt.show()
+
+    return
 
 #================================================================================================================
 
@@ -1468,21 +1639,21 @@ skin_friction_coefficent_vals = Cf_vals_takeoff_landing
 form_factor_vals = form_factor_vals_takeoff_landing
 drag_area_vals = drag_area_vals_gearup
 CD_0_takeoff_landing_gearup = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
-# print("CD_0 Landing Takeoff (Gearup): ", CD_0_takeoff_landing_gearup)
+print("CD_0 Landing & Takeoff (Gearup): ", CD_0_takeoff_landing_gearup)
 
 #Zero Lift Drag (Takeoff Landing (Gear Down) )
 skin_friction_coefficent_vals = Cf_vals_takeoff_landing
 form_factor_vals = form_factor_vals_takeoff_landing
 drag_area_vals = drag_area_vals_geardown
 CD_0_takeoff_landing_geardown = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
-# print("CD_0 Landing Takeoff (Gear Down): ", CD_0_takeoff_landing_geardown)
+print("CD_0 Landing & Takeoff (Gear Down): ", CD_0_takeoff_landing_geardown)
 
 #Zero Lift Drag (Cruise)
 skin_friction_coefficent_vals = Cf_vals_cruise
 form_factor_vals = form_factor_vals_cruise
 drag_area_vals = drag_area_vals_gearup
 CD_0_cruise = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
-# print("CD_0 Cruise: ", CD_0_cruise)
+print("CD_0 Cruise: ", CD_0_cruise)
 
 #Calculating Flap Drag (Takeoff)
 flap_angle_takeoff = 30             #degrees
@@ -1638,7 +1809,45 @@ MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(par
 get_Cost_Estimate(MTOW, MPOW, V_cruise, total_battery_weight, display = True)
 
 #================================================================================================================
+#V-n Diagrams
 
+MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)        #Resets Aircraft Parameters (Safety)
+
+W = MTOW # weight (lbm)
+nmax = 3 # positive limit load
+nmin = 1 # negative limit load
+rho = 0.00237 # air density (slug/ft^3)
+CL = 3.43 # max lift coefficient
+S = S_ref # wing area (ft^2)
+cbar = 7.78760  # mean chord (ft)
+CLalf = 4.944733408 # Lift slope (rad^-1)
+v_n(W,nmax,nmin,rho,CL,S,cbar,CLalf,'Loads (MTOW)','V-n Diagram (MTOW)')
+
+W_crew_and_payload = 12660 
+
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHECK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+minimum_weight = MTOW - W_crew_and_payload - total_battery_weight - optimized_fuel_weight
+
+W = minimum_weight
+v_n(W,nmax,nmin,rho,CL,S,cbar,CLalf,'Loads (Minimum Weight)','V-n Diagram (Minimum Weight)')
 #================================================================================================================
+#Payload Range
+MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)        #Resets Aircraft Parameters (Safety)
+
+V = V_cruise
+b = 95.46
+# C_Do = 0.022
+C_Do = 0.0258
+# C_L = 1.6
+C_L = 1.96
+N_p = 0.9
+c = 7.78760
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHECK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Fuel_Max = optimized_fuel_weight + 6000 
+
+Fuel_Min = optimized_fuel_weight
+Payload_Max = W_crew_and_payload
+OEW = minimum_weight
+get_Payload_Range(V, AR, e, rho, S, b, C_Do, C_L, N_p, c, Fuel_Max, Fuel_Min, Payload_Max, OEW, MTOW)
 
 #================================================================================================================
