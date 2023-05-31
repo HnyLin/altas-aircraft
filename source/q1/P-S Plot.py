@@ -103,14 +103,14 @@ def get_PS_Plot(weight, precision, lbf_lbm, hp, WS, nu_p, AR, w_to, w_L, BFL, rh
     plt.title("P (hp) - S ($ft^2$)")
     
     #plt.legend(loc = 'best')
-    plt.ylim(0, 40000)
+    plt.ylim(0, 10000)
     plt.xlim(400, 1600)
     
     labelLines(plt.gca().get_lines(), zorder=2.5)
     
     plt.fill_between( weight/WS,  weight / wp_balkedOEI, y2 = 40000, where = (weight / WS >= weight / ws_L), interpolate=True, color = "green", alpha = 0.2)
     
-    plt.scatter(800, 14750, marker = "*", color = "red", s = 1000)
+    plt.scatter(605, 5900, marker = "*", color = "red", s = 1000)
     
     plt.show()
     
@@ -127,9 +127,9 @@ WS = np.linspace(1, 300, precision)
 
 
 nu_p = 0.8                                  #From Report
-AR = 10.06                                  #From Design
-w_to = 82561.1                              #lbs from weight estimate
-w_L = 73118                                 #lbs from weight estimate
+AR = 13.39                                  #From Design
+w_to = 43000                                #lbs from weight estimate
+w_L = 43000                                 #lbs from weight estimate
 
 BFL = 4500                                  #From RFP
 

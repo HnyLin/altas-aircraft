@@ -451,7 +451,7 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight
 #================================================================================================================
 
-def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, display = False):
+def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, hyb_climb, hyb_cruise, range_nmi, W_P, h_cruise, display = False):
     '''
     Trade Studies Loop. Slight modification of B1_MTOW_Refined.py
     Takes input variables (for )
@@ -490,17 +490,17 @@ def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, display = Fa
 
     MTOW = 82561.08                 #Max Takeoff Weight (lbs)
     MPOW = 7000                     #Hp Check Value!!!!!!!!!!!
-    R = 500 * 6076.12               #Range (ft)
-    h_cruise = 28000                #Cruising Altitude (ft)!!!!!!
+    R = range_nmi * 6076.12               #Range (ft)
+    #h_cruise = 28000                #Cruising Altitude (ft)!!!!!!
     V_cruise = V_cruise * 1.688     #Convert V_cruise to ft/s
 
     segments = 20
 
     #Start Warmup Taxi, Takeoff, Climb, Cruise, Descent, Landing (Loitter Unavaliable)
-    hybridization_factors = (h1, h2, 0, 0, h3, h4)
+    hybridization_factors = (h1, h2, hyb_climb, hyb_cruise, h3, h4)
 
     #OTHER VARIABLES FOR LOOP
-    W_P = 11.25     #lbf/hp
+    #W_P = 11.25     #lbf/hp
     W_crew_and_payload = 12660      #weight of crew, passengers, and payload, lbs
 
     #Loop setup
@@ -1504,7 +1504,6 @@ D8fuel_burn_per_pass = D8total_fuel_burn / 50
 print("Dash 8-q300 Fuel Weight Per Passenger 500 nmi range (lbf): ", round(D8fuel_burn_per_pass, 2))
 
 #================================================================================================================
-'''
 
 #For Calulating Optimium Aircraft Parameters (Commented Out Due to Long Run Time)
 
@@ -1539,311 +1538,3 @@ MTOW_new, MPOW, total_fuel_burn, total_battery_weight = tradeStudies(AR, t_c_roo
 print("Optimized MTOW (lbf): ", MTOW_new)
 print("Optimized MPOW (hp): ", MPOW)
 print("Optimized Battery Weight (lbf): ", total_battery_weight)
-
-'''
-
-#Optimization Results
-optimized_fuel_weight = 3468                #lbf
-MTOW = 39774                                #lbf
-MPOW = 3535
-AR = 13.02
-t_c_root = 0.25
-S_ref = 700                                 #ft^2
-V_cruise = 350                              #ktas
-h1 = 0.23                                   #Start Warmup Taxi
-h2 = 0.16                                   #Takeoff
-h3 = 0.36                                   #Descent
-h4 = 0.35                                   #Landing
-
-params = [MTOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4, MPOW]
-
-MTOW_new, MPOW, total_fuel_burn, total_battery_weight = tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, display = True)
-print("Optimized MTOW (lbf): ", MTOW_new)
-print("Optimized MPOW (hp): ", MPOW)
-print("Optimized Battery Weight (lbf): ", total_battery_weight)
-
-optimized_fuel_weight_per_pass = optimized_fuel_weight / 50
-print("Optimized Fuel Weight Per Passenger 500 nmi Range (lbf): ", round(optimized_fuel_weight_per_pass, 2))
-
-#Calculating Percent Difference (Block Fuel 500 nmi)
-percent_difference = (optimized_fuel_weight - D8total_fuel_burn) / abs( D8total_fuel_burn ) * 100
-print("Percent Difference in Fuel Burn: {}%" .format(round(percent_difference, 1)))
-
-print("---------------------------------------------------------------")
-
-print("Dash 8-q300 500nmi Trip Fuel Burn (lbf): ", round(D8total_fuel_burn, 2) )
-print("Optimized Hybrid Electric 500nmi Trip Fuel Burn (lbf): ", round(optimized_fuel_weight, 2) )
-
-#================================================================================================================
-
-#Component Weights 
-W_TO = MTOW
-P_rshp = MPOW
-S_w = S_ref
-W_empty = calcEmptyWeight(W_TO, P_rshp, AR, t_c_root, S_w, display = True)
-print("Aircraft Empty Weight (lbs): ", W_empty)
-
-#================================================================================================================
-MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)        #Resets Aircraft Parameters (Safety)
-
-#Refined Drag Polars
-Cl_max = 3.3
-rho_takeoff_landing = 0.0659                #lbm/ft^3
-
-V_stall = np.sqrt( ( 2 * MTOW * 32.174 ) / ( Cl_max * rho_takeoff_landing * S_ref) )
-print("Stall Velocity (ft/s): ", V_stall)
-
-V_takeoff_landing = 1.3 * V_stall   #ft/s
-h_takeoff_landing = 5000            #ft
-h_cruise = 28000                    #ft
-
-Mach_takeoff_landing = getMach(5000, V_takeoff_landing)
-Mach_cruise = getMach(28000, V_cruise)
-
-#Component Data
-#[Wing Section 1, Wing Section 2, V Tail, H Tail, Winglet, Nacelle, Fueselage]
-
-char_length_vals = np.array([9.76, 5.82, 14.09, 5.67, 1.96, 14.167, 81])
-
-percent_lam_flow_vals = np.array( [0.5, 0.5, 0.5, 0.5, 0.5, 0.25, 0.25] )
-
-wetted_area_vals = np.array( [753.8, 701.75, 334.4, 381.6, 37.504, 52.454, 2093] )      
-
-interference_factor_vals = np.array( [1, 1, 1, 1, 1, 1.5, 1] )               
-
-form_factor_vals_takeoff_landing = np.array( [1.84, 1.83, 1.15, 1.17, 1.71, 1.06, 1.13] )
-
-form_factor_vals_cruise = np.array( [2.08, 2.07, 1.2, 1.22, 1.92, 1.058329216, 1.133150585] )
-
-drag_area_vals_geardown = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2), 0.15, 0.15, 0.25]) * 91
-
-drag_area_vals_gearup = np.array([(0.139+0.419*(Mach_takeoff_landing - 0.161)**2) * 91])
-
-#Calculating Coefifecent of Friction Values
-
-altitude = h_takeoff_landing
-velocity = V_takeoff_landing
-Cf_vals_takeoff_landing = get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals)
-# print("Cf Takeoff Landing:", Cf_vals_takeoff_landing)
-
-altitude = h_cruise
-velocity = V_cruise
-Cf_vals_cruise = get_C_f(altitude, velocity, char_length_vals, percent_lam_flow_vals)
-# print("Cf Cruise: ", Cf_vals_cruise)
-
-#Zero Lift Drag (Takeoff Landing (Gearup) )
-skin_friction_coefficent_vals = Cf_vals_takeoff_landing
-form_factor_vals = form_factor_vals_takeoff_landing
-drag_area_vals = drag_area_vals_gearup
-CD_0_takeoff_landing_gearup = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
-print("CD_0 Landing & Takeoff (Gearup): ", CD_0_takeoff_landing_gearup)
-
-#Zero Lift Drag (Takeoff Landing (Gear Down) )
-skin_friction_coefficent_vals = Cf_vals_takeoff_landing
-form_factor_vals = form_factor_vals_takeoff_landing
-drag_area_vals = drag_area_vals_geardown
-CD_0_takeoff_landing_geardown = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
-print("CD_0 Landing & Takeoff (Gear Down): ", CD_0_takeoff_landing_geardown)
-
-#Zero Lift Drag (Cruise)
-skin_friction_coefficent_vals = Cf_vals_cruise
-form_factor_vals = form_factor_vals_cruise
-drag_area_vals = drag_area_vals_gearup
-CD_0_cruise = get_CD_0(S_ref, drag_area_vals, skin_friction_coefficent_vals, form_factor_vals, interference_factor_vals, wetted_area_vals)
-print("CD_0 Cruise: ", CD_0_cruise)
-
-#Calculating Flap Drag (Takeoff)
-flap_angle_takeoff = 30             #degrees
-flap_length = (5.187 + 4.016) /2    #ft
-chord = (12.829 + 10.997) /2        #ft
-flapped_area = 122.73               #ft^2
-flap_angle = flap_angle_takeoff
-slat_angle = 0                          #No Slats
-slat_length = 0                         #No Slats
-slatted_area = 0                        #No Slats
-delta_CD_flap_slat_takeoff = get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle, slat_length, slatted_area)
-
-# print("Delta C_D Flaps and Slats (Takeoff): ", delta_CD_flap_slat_takeoff)
-
-#Calculating Flap Drag (Landing)
-flap_angle_landing = 70     #degrees
-delta_CD_flap_slat_landing = get_flap_drag(flap_length, chord, flapped_area, S_ref, flap_angle, slat_angle, slat_length, slatted_area)
-
-# print("Delta C_D Flaps and Slats (Landing): ", delta_CD_flap_slat_landing)
-
-#Clean (Cruise)
-CL_clean = Cl_max_clean_vals
-CD_clean = CD_i_clean_vals + CD_0_cruise
-
-#Takeoff Flaps, Gear Up
-CL_takeoff_gearup = Cl_max_takeoff_vals
-CD_takeoff_gearup = CD_i_takeoff_vals + CD_0_takeoff_landing_gearup + delta_CD_flap_slat_takeoff
-
-#Takeoff Flaps, Gear Down
-CL_takeoff_geardown = Cl_max_takeoff_vals
-CD_takeoff_geardown = CD_i_takeoff_vals + CD_0_takeoff_landing_geardown + delta_CD_flap_slat_takeoff
-
-#Landing Flaps, Gear Up
-CL_landing_gearup = Cl_max_landing_vals
-CD_landing_gearup = CD_i_landing_vals + CD_0_takeoff_landing_gearup + delta_CD_flap_slat_landing
-
-#Landing Flaps, gear Down
-CL_landing_geardown = Cl_max_landing_vals
-CD_landing_geardown = CD_i_landing_vals + CD_0_takeoff_landing_geardown + delta_CD_flap_slat_landing
-
-
-#Plotting
-#Takeoff Gear Up
-plt.figure(figsize=(12, 12))
-plt.plot(CD_takeoff_gearup, CL_takeoff_gearup, label = "Takeoff Flaps, Gear Up", marker = ".", markersize = 10)
-plt.plot(CD_takeoff_geardown, CL_takeoff_geardown, label = "Takeoff Flaps, Gear Down", marker = ".", markersize = 10)
-plt.plot(CD_landing_gearup, CL_landing_gearup, label = "Landing Flaps, Gear Up", marker = ".", markersize = 10)
-plt.plot(CD_landing_geardown, CL_landing_geardown, label = "Landing Flaps, Gear Down", marker = ".", markersize = 10)
-plt.plot(CD_clean, CL_clean, label = "Clean", marker = ".", markersize = 10)
-plt.ylabel("$C_L$")
-plt.xlabel("$C_D$")
-plt.title("$C_L$ vs $C_D$ Drag Polars")
-plt.legend()
-plt.show()
-
-#================================================================================================================
-
-'''
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Plotting Held for Speed !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#AR vs. CD0 Carpet Plot (Trade Study)
-h_cruise = 28000
-e = 0.8
-V_cruise = 350
-n = 7
-AR_vals = np.linspace(5, 20, n)
-C_D0_vals = np.linspace(0.005, 0.005*n, n)
-Get_AR_CD0_Carpet(V_cruise, AR_vals, C_D0_vals, e, n)
-
-#tc vs V_cruise Carpet Plot (Trade Study)
-n = 4
-t_c_vals = np.linspace(0.05, 0.35, 4)
-V_cruise_vals = np.linspace(250, 400, 4)
-Get_tc_Vcruise_Carpet(t_c_vals, V_cruise_vals)
-
-'''
-#================================================================================================================
-
-MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)
-
-#Updated P-S Plot
-#Inputs
-lbf_lbm = 32.17
-hp = 550                #550 ft*lbf / s
-
-precision = 900
-WS = np.linspace(1, 300, precision)
-
-
-nu_p = 0.8                                  #From Report
-w_to = MTOW                              #lbs from weight estimate
-w_L = MTOW                                 #lbs from weight estimate
-
-BFL = 4500                                  #From RFP
-
-#Inputs (Takeoff)
-rho_SL = 0.0765                             #lbm/ft^3
-rho = 0.0659                                #Air density at 5000'
-C_lmax_TO = 1.7                             #Roskam Vol 1 Table 3.1
-BPR = 50                                    #Verify BPR for Turbofan
-k_2 = 0.75 * (5 + BPR) / (4 + BPR)
-k_1 = 0.0447
-C_d0_TO = 0.045                             #From Drag Polars
-mu_g = 0.025                                #From Roskam
-
-#Inputs (Landing)
-S_FL = 4500
-S_L = S_FL                                  #Additional Safety Factor deleted (times 0.6)
-S_a = 1000                                  #Metabook eq 4.46 (ft)
-C_lmax_L = 3.3                              #Roskam Vol 1 Table 3.1
-
-#Inputs(Cruise)
-rho_cruise = 10.66*10**-4  * lbf_lbm        #Air density at 28000'
-V_cruise = V_cruise * 1.688                 #Declared in the beginning for W/P
-C_D0_cruise = 0.025                         #Drag Polar Estimate
-e_cruise = 0.75                             #Drag Polar Estimate
-
-#Inputs (Ceiling)
-G_ceiling = 0.001
-e = 0.8
-rho_ceiling = 0.0287                        #air density at 30,000   
-
-#FAR 25.121 Climb Inputs
-#Takeoff Climb
-#Transition Segment Climb
-#Second Segment Climb
-#Enroute Climb
-#Balked Landing Climb
-C_Lmax = 1.7
-G_climbvals = [0.012, 0, 0.024, 0.012, 0.032, 0.021]
-k_svals = [1.2, 1.15, 1.2, 1.25, 1.3, 1.5]
-C_D0vals = [0.045 + 0.025, 0.045 + 0.025, 0.045, 0.025, 0.125 + 0.1, (0.125 + 0.1) / 2]
-C_Lmax_vals = [C_lmax_TO, C_lmax_TO, C_lmax_TO, C_Lmax, C_lmax_L, 0.85 * C_lmax_L]
-labels = ["Takeoff Climb", "Transition Segment Climb", "Second Segment Climb", 
-          "Enroute Climb", "Balked Landing Climb AEO", "Balked Landing Climb OEI"]
-e_vals = [0.75, 0.75, 0.75, 0.8, 0.7, 0.7]
-w_vals = [0.95 * w_to,  0.94 * w_to, 0.93 * w_to, 0.92 * w_to, 1 * w_to, 1 * w_to]
-N_correction = [1, 1, 1, 1, 1, 2]
-
-weight = w_to                          
-
-wp_TOSL30, wp_TOSL50, wp_TO5K50, wp_cruise, wp_takeoffclimb, wp_transegmentclimb, \
-    wp_secsegmentclimb, wp_enrouteclimb, wp_balkedAEO, wp_balkedOEI, \
-        wp_celing, ws_L = get_PS_Plot(weight, precision, lbf_lbm, hp, WS, nu_p, AR, w_to, w_L, BFL, rho_SL, rho, 
-                  C_lmax_TO, k_1, k_2, C_d0_TO, mu_g, S_FL, S_L, S_a, C_lmax_L, 
-                  rho_cruise, V_cruise, C_D0_cruise, e_cruise, G_ceiling, e, 
-                  rho_ceiling, C_Lmax, G_climbvals, k_svals, C_D0vals, 
-                  C_Lmax_vals, labels, e_vals, w_vals, N_correction)
-#================================================================================================================
-#Refined Weight Estimate
-
-MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)        #Resets Aircraft Parameters (Safety)
-
-get_Cost_Estimate(MTOW, MPOW, V_cruise, total_battery_weight, display = True)
-
-#================================================================================================================
-#V-n Diagrams
-
-MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)        #Resets Aircraft Parameters (Safety)
-
-W = MTOW # weight (lbm)
-nmax = 3 # positive limit load
-nmin = 1 # negative limit load
-rho = 0.00237 # air density (slug/ft^3)
-CL = 3.43 # max lift coefficient
-S = S_ref # wing area (ft^2)
-cbar = 7.78760  # mean chord (ft)
-CLalf = 4.944733408 # Lift slope (rad^-1)
-v_n(W,nmax,nmin,rho,CL,S,cbar,CLalf,'Loads (MTOW)','V-n Diagram (MTOW)')
-
-W_crew_and_payload = 12660 
-
-minimum_weight = MTOW - W_crew_and_payload - optimized_fuel_weight
-
-W = minimum_weight
-v_n(W,nmax,nmin,rho,CL,S,cbar,CLalf,'Loads (Minimum Weight)','V-n Diagram (Minimum Weight)')
-#================================================================================================================
-#Payload Range
-MTOW, MPOW, AR, t_c_root, S_ref, V_cruise, h1, h2, h3, h4 = reset_parameters(params)        #Resets Aircraft Parameters (Safety)
-
-V = V_cruise
-b = 95.46
-# C_Do = 0.022
-C_Do = 0.0258
-# C_L = 1.6
-C_L = 1.96
-N_p = 0.9
-c = 7.78760
-
-Fuel_Max = optimized_fuel_weight + 7000 
-
-Fuel_Min = optimized_fuel_weight
-Payload_Max = W_crew_and_payload
-OEW = minimum_weight
-get_Payload_Range(V, AR, e, rho, S, b, C_Do, C_L, N_p, c, Fuel_Max, Fuel_Min, Payload_Max, OEW, MTOW)
-
-#================================================================================================================
