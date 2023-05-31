@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 from labellines import labelLines
 
 #A3 Code
-def tw_wp( WS, nu_p, tw, C_L ):
+def tw_wp( WS, nu_p, tw, C_L, rho ):
+    lbf_lbm = 32.17
     V_cruise = np.sqrt ( 2 / ( rho * C_L ) * WS * lbf_lbm)
     wp = nu_p / V_cruise * (1 / tw)
     return wp
@@ -18,7 +19,7 @@ def get_Restraint(precision, lbf_lbm, hp, WS, nu_p, AR, w_to, w_L, BFL, rho_SL, 
                   C_lmax_TO, k_1, k_2, C_d0_TO, mu_g, S_FL, S_L, S_a, C_lmax_L, 
                   rho_cruise, V_cruise, C_D0_cruise, e_cruise, G_ceiling, e, 
                   rho_ceiling, C_Lmax, G_climbvals, k_svals, C_D0vals, 
-                  C_Lmax_vals, labels, e_vals, w_vals, N_correction):
+                  C_Lmax_vals, labels, e_vals, w_vals, N_correction, wing_area):
     
     plt.figure(figsize = (16,10) )
     plt.xlabel("W/S (lbf / ft^2)")
@@ -62,7 +63,6 @@ def get_Restraint(precision, lbf_lbm, hp, WS, nu_p, AR, w_to, w_L, BFL, rho_SL, 
     plt.plot( WS, wp_cruise, label = "Cruise" )
     
     #Stall
-    wing_area = 802.53
     V_takeoff = np.sqrt( 2 * w_to / (C_lmax_TO * wing_area * rho_SL) )
     V_stall = 1/ 1.1 * V_takeoff
     ws_stall = 1 / 2 * rho * V_stall ** 2 * C_Lmax
@@ -131,6 +131,7 @@ nu_p = 0.8                                  #From Report
 AR = 10.06                                  #From Design
 w_to = 82561.1                              #lbs from weight estimate
 w_L = 73118                                 #lbs from weight estimate
+wing_area = 802.53
 
 BFL = 4500                                  #From RFP
 
