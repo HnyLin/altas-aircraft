@@ -827,7 +827,7 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     LD_vals_cruise = np.ones(segments)
     ff_vals_cruise = np.ones(segments)
 
-    rho_cruise = np.interp(28000, h_interp, rho_interp)
+    rho_cruise = np.interp(h_cruise, h_interp, rho_interp)
 
     #Calculating coeffficent of lift
     for i in range(segments-1):
@@ -964,9 +964,9 @@ def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, hyb_climb, h
         #MTOW_plot[p] = MTOW_new
         MTOW = MTOW_new
 
-        W_P = get_WP(MTOW, Wing_area, AR, h_cruise)
+    W_P = get_WP(MTOW, Wing_area, AR, h_cruise)
 
-        MPOW = MTOW/W_P
+    MPOW = MTOW/W_P
 
     #print('New MTOW is: ', MTOW_new)
     #print('New Power Req is:', MPOW)
@@ -1057,10 +1057,6 @@ def objective_function(params):
 
         #MTOW_plot[p] = MTOW_new
         MTOW = MTOW_new
-
-        W_P = get_WP(MTOW, Wing_area, AR, h_cruise)
-
-        MPOW = MTOW/W_P
 
     #print('New MTOW is: ', MTOW_new)
     #print('New Power Req is:', MPOW)
@@ -1956,10 +1952,10 @@ print("Dash 8-q300 Fuel Weight Per Passenger 500 nmi range (lbf): ", round(D8fue
 #Setting Initial Guess
 
 #AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, hyb_climb, hyb_cruise, range_nmi, h_cruise
-initial_guess = [13, 0.15, 700, 350, 0.25, 0.25, 0.25, 0.25, 0, 0, 500, 28000]
+initial_guess = [15, 0.15, 700, 350, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 500, 28000]
 
 #Setting Bounds
-bound_vals = ((10, 13.14), (0.1, 0.25), (650, 750), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1), (0, 1), (0, 1), (500, 1000), (10000, 28000))
+bound_vals = ((10, 17), (0.1, 0.25), (650, 800), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1), (0, 1), (0, 1), (499, 501), (25000, 30000))
 
 #Optimize
 start_time = time.time()
