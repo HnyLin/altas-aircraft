@@ -1968,10 +1968,10 @@ print("Dash 8-q300 Fuel Weight Per Passenger 500 nmi range (lbf): ", round(D8fue
 #Setting Initial Guess
 
 #AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, hyb_climb, hyb_cruise, range_nmi, h_cruise
-initial_guess = [15, 0.13, 700, 350, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 1025, 28000]
+initial_guess = [15, 0.13, 700, 350, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 500, 28000]
 
 #Setting Bounds
-bound_vals = ((10, 16), (0.1, 0.15), (650, 800), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1), (0, 0.13), (0, 0.13), (1000, 1050), (25000, 30000))
+bound_vals = ((10, 16), (0.1, 0.15), (650, 800), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1), (0, 0.1), (0, 0.1), (499, 501), (25000, 30000))
 
 #Optimize
 start_time = time.time()
