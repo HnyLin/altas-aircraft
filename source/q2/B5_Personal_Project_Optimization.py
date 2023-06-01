@@ -662,6 +662,15 @@ def HFCA_to_Battery(fuel_weight):
 
     return battery_weight
 
+def Battery_to_HFCA(battery_weight):
+    battery_mass = battery_weight / 32.17
+    SED_JetA1 = 43.1 * 429.9                    #Btu/lb
+    SED_Battery = 500 * 3600 / 10**6 * 429.9    #Btu/lb
+    fuel_mass = battery_mass * SED_Battery / SED_JetA1
+    fuel_weight = fuel_mass * 32.17
+
+    return fuel_weight
+
 def Get_Drag_Polar(AR, Wing_area, MTOW, c_f, c, d, phase):
     
     phase_dict = {"Clean" : 0,
@@ -889,6 +898,13 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     total_hybrid_weight = total_fuel_burn + Battery_Weights[-1] * 1.2
 
     total_battery_weight = Battery_Weights[-1] * 1.2
+
+    recharge_weight = sum(Battery_Weights) - total_battery_weight
+
+    recharge_fuel = Battery_to_HFCA(recharge_weight)
+    #print("Recharge Fuel: ", recharge_fuel)
+
+    total_fuel_burn = total_fuel_burn + recharge_fuel
 
     return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight
 #================================================================================================================
@@ -1952,10 +1968,10 @@ print("Dash 8-q300 Fuel Weight Per Passenger 500 nmi range (lbf): ", round(D8fue
 #Setting Initial Guess
 
 #AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, hyb_climb, hyb_cruise, range_nmi, h_cruise
-initial_guess = [15, 0.15, 700, 350, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 500, 28000]
+initial_guess = [15, 0.13, 700, 350, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 1025, 28000]
 
 #Setting Bounds
-bound_vals = ((10, 17), (0.1, 0.25), (650, 800), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1), (0, 1), (0, 1), (499, 501), (25000, 30000))
+bound_vals = ((10, 16), (0.1, 0.15), (650, 800), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1), (0, 0.13), (0, 0.13), (1000, 1050), (25000, 30000))
 
 #Optimize
 start_time = time.time()
