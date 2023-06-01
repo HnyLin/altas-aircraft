@@ -904,7 +904,7 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     recharge_fuel = Battery_to_HFCA(recharge_weight)
     #print("Recharge Fuel: ", recharge_fuel)
 
-    total_fuel_burn = total_fuel_burn + recharge_fuel
+    #total_fuel_burn = total_fuel_burn + recharge_fuel
 
     return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight
 #================================================================================================================
@@ -1073,6 +1073,8 @@ def objective_function(params):
 
         #MTOW_plot[p] = MTOW_new
         MTOW = MTOW_new
+
+        print("Total Fuel Burn: ", total_fuel_burn)
 
     #print('New MTOW is: ', MTOW_new)
     #print('New Power Req is:', MPOW)
@@ -1968,14 +1970,14 @@ print("Dash 8-q300 Fuel Weight Per Passenger 500 nmi range (lbf): ", round(D8fue
 #Setting Initial Guess
 
 #AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, hyb_climb, hyb_cruise, range_nmi, h_cruise
-initial_guess = [15, 0.13, 700, 350, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 500, 28000]
+initial_guess = [15, 0.13, 700, 350, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 1000, 29500]
 
 #Setting Bounds
-bound_vals = ((10, 16), (0.1, 0.15), (650, 800), (280, 450), (0, 1), (0, 1), (0, 1), (0, 1), (0, 0.1), (0, 0.1), (499, 501), (25000, 30000))
+bound_vals = ((10, 18), (0.1, 0.15), (650, 1000), (275, 450), (0, 1), (0, 1), (0, 1), (0, 1), (0, 0.1), (0, 0.1), (1000, 1000), (25000, 30000))
 
 #Optimize
 start_time = time.time()
-result = optimize.minimize(objective_function, x0 = initial_guess, bounds = bound_vals, options= {'disp': True}, tol = 10 ** -8 )
+result = optimize.minimize(objective_function, method = "Powell", x0 = initial_guess, bounds = bound_vals, options= {'disp': True}, tol = 10 ** -8 )
 end_time = time.time()
 print("Elapsed Timed (min): ", (end_time - start_time)/60)
 print("Optimized Values")
@@ -1995,10 +1997,12 @@ h3 = result.x[6]
 h4 = result.x[7]
 hyb_climb = result.x[8]
 hyb_cruise = result.x[9]
-range_nmi = result.x[10]
+range_nmi = 500             #result.x[10]
 h_cruise = result.x[11]
 
 MTOW_new, MPOW, total_fuel_burn, total_battery_weight = tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, hyb_climb, hyb_cruise, range_nmi, h_cruise, display = False)
 print("Optimized MTOW (lbf): ", MTOW_new)
 print("Optimized MPOW (hp): ", MPOW)
 print("Optimized Battery Weight (lbf): ", total_battery_weight)
+print("Optimized 500 nmi Range Fuel Burn: ", total_fuel_burn)
+print("Optimized 500 nmi Range Fuel Burn Per Passenger: ", total_fuel_burn / 50)
