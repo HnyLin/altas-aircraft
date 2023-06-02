@@ -904,7 +904,7 @@ def Fuel_Fraction_Calculator(AR, Wing_area, c_f, c, d, MTOW, MPOW, SFC, R, segme
     recharge_fuel = Battery_to_HFCA(recharge_weight)
     #print("Recharge Fuel: ", recharge_fuel)
 
-    #total_fuel_burn = total_fuel_burn + recharge_fuel
+    total_fuel_burn = total_fuel_burn + recharge_fuel
 
     return SWT_fuel_burn, Takeoff_fuel_burn, climb_fuel_burn, cruise_fuel_burn, desecent_fuel_burn, landing_fuel_burn, total_fuel_burn, total_battery_weight, total_hybrid_weight
 #================================================================================================================
@@ -980,9 +980,8 @@ def tradeStudies(AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, hyb_climb, h
         #MTOW_plot[p] = MTOW_new
         MTOW = MTOW_new
 
-    W_P = get_WP(MTOW, Wing_area, AR, h_cruise)
-
-    MPOW = MTOW/W_P
+        W_P = get_WP(MTOW, Wing_area, AR, h_cruise)
+        MPOW = MTOW/W_P
 
     #print('New MTOW is: ', MTOW_new)
     #print('New Power Req is:', MPOW)
@@ -1051,6 +1050,12 @@ def objective_function(params):
     #Start Warmup Taxi, Takeoff, Climb, Cruise, Descent, Landing (Loitter Unavaliable)
     hybridization_factors = (h1, h2, hyb_climb, hyb_cruise, h3, h4)
 
+    global h1_vals, h2_vals, h3_vals, h4_vals
+    h1_vals.append(h1)
+    h2_vals.append(h2)
+    h3_vals.append(h3)
+    h4_vals.append(h4)
+
     #OTHER VARIABLES FOR LOOP
 
     W_crew_and_payload = 12660      #weight of crew, passengers, and payload, lbs
@@ -1074,7 +1079,10 @@ def objective_function(params):
         #MTOW_plot[p] = MTOW_new
         MTOW = MTOW_new
 
-        print("Total Fuel Burn: ", total_fuel_burn)
+    print("Total Fuel Burn: ", total_fuel_burn)
+
+    global optimization_results
+    optimization_results.append(total_fuel_burn)
 
     #print('New MTOW is: ', MTOW_new)
     #print('New Power Req is:', MPOW)
@@ -1931,6 +1939,10 @@ def get_Payload_Range(V, AR, e, rho, S, b, C_Do, C_L, N_p, c, Fuel_Max, Fuel_Min
 
 #================================================================================================================
 
+def objective(x, a, b, c):
+ return a * x + b * x**2 + c
+#================================================================================================================
+
 print("========================================================================")
 print("Optimization")
 print("========================================================================")
@@ -1967,17 +1979,25 @@ print("Dash 8-q300 Fuel Weight Per Passenger 500 nmi range (lbf): ", round(D8fue
 
 #For Calulating Optimium Aircraft Parameters (Commented Out Due to Long Run Time)
 
+#Global Variables
+optimization_results = []
+h1_vals = []
+h2_vals = []
+h3_vals = []
+h4_vals = []
+
 #Setting Initial Guess
 
 #AR, t_c_root, Wing_area, V_cruise, h1, h2, h3, h4, hyb_climb, hyb_cruise, range_nmi, h_cruise
 initial_guess = [15, 0.13, 700, 350, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 1000, 29500]
+#initial_guess = [15, 0.13, 700, 350, 0, 0, 0, 0, 0.05, 0, 1000, 29500]
 
 #Setting Bounds
 bound_vals = ((10, 18), (0.1, 0.15), (650, 1000), (275, 450), (0, 1), (0, 1), (0, 1), (0, 1), (0, 0.1), (0, 0.1), (1000, 1000), (25000, 30000))
 
 #Optimize
 start_time = time.time()
-result = optimize.minimize(objective_function, method = "Powell", x0 = initial_guess, bounds = bound_vals, options= {'disp': True}, tol = 10 ** -8 )
+result = optimize.minimize(objective_function, method = "Powell", x0 = initial_guess, bounds = bound_vals, options= {'disp': True}, tol = 10 ** -5 )
 end_time = time.time()
 print("Elapsed Timed (min): ", (end_time - start_time)/60)
 print("Optimized Values")
@@ -2006,3 +2026,42 @@ print("Optimized MPOW (hp): ", MPOW)
 print("Optimized Battery Weight (lbf): ", total_battery_weight)
 print("Optimized 500 nmi Range Fuel Burn: ", total_fuel_burn)
 print("Optimized 500 nmi Range Fuel Burn Per Passenger: ", total_fuel_burn / 50)
+
+#Plot Convergence
+markersize = 1
+iteration_count = np.linspace(0, len(optimization_results), len(optimization_results))
+plt.scatter(iteration_count, optimization_results, s = markersize)
+
+temp, _ = optimize.curve_fit(objective, iteration_count, optimization_results)
+a, b, c = temp
+
+x_line = iteration_count
+y_line = objective(x_line, a, b, c)
+
+plt.title("Fuel Burn Convergence")
+plt.plot(x_line, y_line, '--', color = 'red')
+plt.ylim(min(y_line) - 100, max(y_line) + 100)
+plt.xlabel("Iterations")
+plt.ylabel("Fuel Burn (lbs)")
+plt.show()
+
+plt.title("Hybridization Ratios Convergence")
+plt.scatter(iteration_count, h1_vals, s = markersize)
+plt.scatter(iteration_count, h2_vals, s = markersize)
+plt.scatter(iteration_count, h3_vals, s = markersize)
+plt.scatter(iteration_count, h4_vals, s = markersize)
+
+labels = ["Start Warmup Taxi", "Takeoff", "Descent", "Landing"]
+for i in range(len(labels)):
+    hybridization_values = [h1_vals, h2_vals, h3_vals, h4_vals]
+    temp, _ = optimize.curve_fit(objective, iteration_count, hybridization_values[i])
+    a, b, c = temp
+    x_line = iteration_count
+    y_line = objective(x_line, a, b, c)
+    plt.plot(x_line, y_line, '--', label = labels[i])  
+
+plt.legend()
+plt.ylim(min(y_line), max(y_line))
+plt.xlabel("Iterations")
+plt.ylabel("Hybridization Ratio")
+plt.show()
